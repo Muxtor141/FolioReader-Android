@@ -1,9 +1,13 @@
 package com.folioreader.ui.activity;
 
 import android.graphics.Rect;
+
+import androidx.annotation.Nullable;
+
 import com.folioreader.Config;
 import com.folioreader.model.DisplayUnit;
 import com.folioreader.model.locators.ReadLocator;
+import com.folioreader.ui.view.LoadingView;
 
 import java.lang.ref.WeakReference;
 
@@ -36,4 +40,6 @@ public interface FolioActivityCallback {
     WeakReference<FolioActivity> getActivity();
 
     String getStreamerUrl();
+
+    LoadingView getLoadingView();
 }

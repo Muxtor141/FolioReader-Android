@@ -58,10 +58,7 @@ import com.folioreader.ui.adapter.FolioPageFragmentAdapter
 import com.folioreader.ui.adapter.SearchAdapter
 import com.folioreader.ui.fragment.FolioPageFragment
 import com.folioreader.ui.fragment.MediaControllerFragment
-import com.folioreader.ui.view.ConfigBottomSheetDialogFragment
-import com.folioreader.ui.view.DirectionalViewpager
-import com.folioreader.ui.view.FolioAppBarLayout
-import com.folioreader.ui.view.MediaControllerCallback
+import com.folioreader.ui.view.*
 import com.folioreader.util.AppUtil
 import com.folioreader.util.FileUtil
 import com.folioreader.util.UiUtil
@@ -543,10 +540,15 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
         return streamerUri.toString()
     }
 
+    override fun getLoadingView(): LoadingView? {
+        return currentFragment?.loadingView
+    }
+
     override fun onDirectionChange(newDirection: Config.Direction) {
         Log.v(LOG_TAG, "-> onDirectionChange")
 
         var folioPageFragment: FolioPageFragment? = currentFragment ?: return
+        val callback = folioPageFragment?.loadingView?.callback
         entryReadLocator = folioPageFragment!!.getLastReadLocator()
         val searchLocatorVisible = folioPageFragment.searchLocatorVisible
 
@@ -561,6 +563,7 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
         mFolioPageViewPager!!.currentItem = currentChapterIndex
 
         folioPageFragment = currentFragment ?: return
+        folioPageFragment.loadingView?.callback = callback
         searchLocatorVisible?.let {
             folioPageFragment.highlightSearchLocator(searchLocatorVisible)
         }

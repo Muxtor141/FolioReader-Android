@@ -95,7 +95,7 @@ class FolioPageFragment : Fragment(),
 
     private var mRootView: View? = null
 
-    private var loadingView: LoadingView? = null
+    var loadingView: LoadingView? = null
     private var mScrollSeekbar: VerticalSeekbar? = null
     var mWebview: FolioWebView? = null
     private var webViewPager: WebViewPager? = null
@@ -584,11 +584,11 @@ class FolioPageFragment : Fragment(),
     }
 
     fun getLastReadLocator(): ReadLocator? {
-        Log.v(LOG_TAG, "-> getLastReadLocator -> " + spineItem.href!!)
+        Log.v(LOG_TAG, "-> getLastReadLocator -> " + spineItem.href)
         try {
             synchronized(this) {
                 mWebview!!.loadUrl(getString(R.string.callComputeLastReadCfi))
-                (this as java.lang.Object).wait(5000)
+                (this as java.lang.Object).wait(1000)
             }
         } catch (e: InterruptedException) {
             Log.e(LOG_TAG, "-> ", e)

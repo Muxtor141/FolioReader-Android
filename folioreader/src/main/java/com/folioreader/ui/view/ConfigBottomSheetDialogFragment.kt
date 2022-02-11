@@ -3,6 +3,7 @@ package com.folioreader.ui.view
 import android.animation.Animator
 import android.animation.ArgbEvaluator
 import android.animation.ValueAnimator
+import android.content.DialogInterface
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -26,6 +27,8 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import kotlinx.android.synthetic.main.view_config.*
 import org.greenrobot.eventbus.EventBus
+import kotlin.math.max
+import kotlin.math.min
 
 /**
  * Created by mobisys2 on 11/16/2016.
@@ -34,6 +37,7 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
 
     companion object {
         const val FADE_DAY_NIGHT_MODE = 500
+
         @JvmField
         val LOG_TAG: String = ConfigBottomSheetDialogFragment::class.java.simpleName
     }
@@ -42,7 +46,11 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
     private var isNightMode = false
     private lateinit var activityCallback: FolioActivityCallback
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         return inflater.inflate(R.layout.view_config, container)
     }
 
@@ -93,6 +101,10 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
             view_config_ib_night_mode.isSelected = false
             UiUtil.setColorIntToDrawable(config.themeColor, view_config_ib_day_mode!!.drawable)
             UiUtil.setColorResToDrawable(R.color.app_gray, view_config_ib_night_mode.drawable)
+        }
+
+        activityCallback.loadingView.callback = { isLoading ->
+            controlsEnabled(isLoading.not())
         }
     }
 
@@ -170,6 +182,25 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
         view_config_font_raleway.setOnClickListener { selectFont(Constants.FONT_RALEWAY, true) }
     }
 
+    private fun controlsEnabled(value: Boolean) {
+        listOf(
+            view_config_font_andada,
+            view_config_font_lato,
+            view_config_font_lora,
+            view_config_font_raleway,
+            view_config_ib_day_mode,
+            view_config_ib_night_mode,
+            view_config_font_size_seek_bar,
+            view_config_iv_label_font_big,
+            view_config_iv_label_font_small,
+            buttonVertical,
+            buttonHorizontal
+        ).forEach {
+            it.isEnabled = value
+            it.isClickable = value
+        }
+    }
+
     private fun selectFont(selectedFont: Int, isReloadNeeded: Boolean) {
         when (selectedFont) {
             Constants.FONT_ANDADA -> setSelectedFont(true, false, false, false)
@@ -191,15 +222,18 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
         view_config_font_raleway.isSelected = raleway
     }
 
+    private lateinit var colorAnimation: ValueAnimator
+
     private fun toggleBlackTheme() {
 
         val day = ContextCompat.getColor(context!!, R.color.white)
         val night = ContextCompat.getColor(context!!, R.color.night)
 
-        val colorAnimation = ValueAnimator.ofObject(
+        colorAnimation = ValueAnimator.ofObject(
             ArgbEvaluator(),
             if (isNightMode) night else day, if (isNightMode) day else night
         )
+
         colorAnimation.duration = FADE_DAY_NIGHT_MODE.toLong()
 
         colorAnimation.addUpdateListener { animator ->
@@ -207,13 +241,15 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
             container.setBackgroundColor(value)
         }
 
+        val mActivity = activity
+
         colorAnimation.addListener(object : Animator.AnimatorListener {
             override fun onAnimationStart(animator: Animator) {}
 
             override fun onAnimationEnd(animator: Animator) {
                 isNightMode = !isNightMode
                 config.isNightMode = isNightMode
-                AppUtil.saveConfig(activity, config)
+                AppUtil.saveConfig(mActivity, config)
                 EventBus.getDefault().post(ReloadDataEvent())
             }
 
@@ -255,20 +291,39 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
     private fun configSeekBar() {
         val thumbDrawable = ContextCompat.getDrawable(activity!!, R.drawable.seekbar_thumb)
         UiUtil.setColorIntToDrawable(config.themeColor, thumbDrawable)
-        UiUtil.setColorResToDrawable(R.color.grey_color, view_config_font_size_seek_bar.progressDrawable)
+        UiUtil.setColorResToDrawable(
+            R.color.grey_color,
+            view_config_font_size_seek_bar.progressDrawable
+        )
         view_config_font_size_seek_bar.thumb = thumbDrawable
 
-        view_config_font_size_seek_bar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
-                config.fontSize = progress
-                AppUtil.saveConfig(activity, config)
-                EventBus.getDefault().post(ReloadDataEvent())
-            }
+        fun setSize() {
+            config.fontSize = view_config_font_size_seek_bar.progress
+            AppUtil.saveConfig(activity, config)
 
+            EventBus.getDefault().post(ReloadDataEvent())
+        }
+
+        view_config_font_size_seek_bar.setOnSeekBarChangeListener(object :
+            SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {}
             override fun onStartTrackingTouch(seekBar: SeekBar) {}
-
-            override fun onStopTrackingTouch(seekBar: SeekBar) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar) {
+                setSize()
+            }
         })
+
+        view_config_iv_label_font_small.setOnClickListener {
+            view_config_font_size_seek_bar.progress =
+                max(view_config_font_size_seek_bar.progress - 1, 0)
+            setSize()
+        }
+
+        view_config_iv_label_font_big.setOnClickListener {
+            view_config_font_size_seek_bar.progress =
+                min(view_config_font_size_seek_bar.progress + 1, 4)
+            setSize()
+        }
     }
 
     private fun setToolBarColor() {
@@ -281,8 +336,9 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
 
     private fun setAudioPlayerBackground() {
 
-        var mediaControllerFragment: Fragment? = fragmentManager?.findFragmentByTag(MediaControllerFragment.LOG_TAG)
-            ?: return
+        var mediaControllerFragment: Fragment? =
+            fragmentManager?.findFragmentByTag(MediaControllerFragment.LOG_TAG)
+                ?: return
         mediaControllerFragment = mediaControllerFragment as MediaControllerFragment
         if (isNightMode) {
             mediaControllerFragment.setDayMode()
@@ -290,4 +346,11 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
             mediaControllerFragment.setNightMode()
         }
     }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        activityCallback.loadingView?.callback = null
+        colorAnimation.removeAllUpdateListeners()
+    }
+
 }
