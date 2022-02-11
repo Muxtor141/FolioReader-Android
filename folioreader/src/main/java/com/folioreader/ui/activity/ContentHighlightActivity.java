@@ -117,4 +117,9 @@ public class ContentHighlightActivity extends AppCompatActivity {
         ft.commit();
     }
 
+    @Override
+    public void finish() {
+        super.finish();
+        overridePendingTransition(R.anim.stay, R.anim.slide_out_right);
+    }
 }
