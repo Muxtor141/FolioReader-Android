@@ -4,24 +4,26 @@ apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
+group = 'com.github.imnadev'
+
 ext {
     bintrayRepo = 'maven'
     bintrayName = 'folioreader'
 
-    publishedGroupId = 'com.folioreader'
+    publishedGroupId = 'dev.imna'
     libraryName = 'FolioReader'
     artifact = 'folioreader'
 
     libraryDescription = 'An epub reader for Android'
 
-    siteUrl = 'https://github.com/FolioReader/FolioReader-Android'
-    gitUrl = 'https://github.com/FolioReader/FolioReader-Android.git'
+    siteUrl = 'https://github.com/imnadev/FolioReader-Android'
+    gitUrl = 'https://github.com/imnadev/FolioReader-Android.git'
 
     libraryVersion = versions.folioreaderSdk
 
-    developerId = 'mobisystech'
-    developerName = 'Folio Reader'
-    developerEmail = 'mahavir@codetoart.com'
+    developerId = 'imnadev'
+    developerName = 'Makhmudjon Kalandarov'
+    developerEmail = 'imnadev@gmail.com'
 
     licenseName = 'FreeBSD License'
     licenseUrl = 'https://en.wikipedia.org/wiki/FreeBSD_Documentation_License#License'
