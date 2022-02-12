@@ -222,7 +222,7 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
         view_config_font_raleway.isSelected = raleway
     }
 
-    private lateinit var colorAnimation: ValueAnimator
+    private var colorAnimation: ValueAnimator? = null
 
     private fun toggleBlackTheme() {
 
@@ -234,16 +234,16 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
             if (isNightMode) night else day, if (isNightMode) day else night
         )
 
-        colorAnimation.duration = FADE_DAY_NIGHT_MODE.toLong()
+        colorAnimation!!.duration = FADE_DAY_NIGHT_MODE.toLong()
 
-        colorAnimation.addUpdateListener { animator ->
+        colorAnimation!!.addUpdateListener { animator ->
             val value = animator.animatedValue as Int
             container.setBackgroundColor(value)
         }
 
         val mActivity = activity
 
-        colorAnimation.addListener(object : Animator.AnimatorListener {
+        colorAnimation!!.addListener(object : Animator.AnimatorListener {
             override fun onAnimationStart(animator: Animator) {}
 
             override fun onAnimationEnd(animator: Animator) {
@@ -258,7 +258,7 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
             override fun onAnimationRepeat(animator: Animator) {}
         })
 
-        colorAnimation.duration = FADE_DAY_NIGHT_MODE.toLong()
+        colorAnimation!!.duration = FADE_DAY_NIGHT_MODE.toLong()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 
@@ -285,7 +285,7 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
             navigationColorAnim.start()
         }
 
-        colorAnimation.start()
+        colorAnimation!!.start()
     }
 
     private fun configSeekBar() {
@@ -350,7 +350,7 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         activityCallback.loadingView?.callback = null
-        colorAnimation.removeAllUpdateListeners()
+        colorAnimation?.removeAllUpdateListeners()
     }
 
 }
