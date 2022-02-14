@@ -808,7 +808,7 @@ function onClickHighlight(element) {
     event.stopPropagation();
     thisHighlight = element;
     var rectJson = getSelectionRect(element);
-    FolioWebView.setSelectionRect(rectJson.left, rectJson.top, rectJson.right, rectJson.bottom);
+    FolioWebView.setSelectionRect(rectJson.left, rectJson.top, rectJson.right, rectJson.bottom, true);
 }
 
 function deleteThisHighlight() {

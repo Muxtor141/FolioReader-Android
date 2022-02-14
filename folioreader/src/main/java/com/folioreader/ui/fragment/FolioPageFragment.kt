@@ -243,6 +243,7 @@ class FolioPageFragment : Fragment(),
         if (isAdded) {
             mWebview!!.dismissPopupWindow()
             mWebview!!.initViewTextSelection()
+            mWebview!!.initViewDelete()
             loadingView!!.updateTheme()
             loadingView!!.show()
             mIsPageReloaded = true

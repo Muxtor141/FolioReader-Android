@@ -12,7 +12,7 @@
         app:cardUseCompatPadding="true">
 
         <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="288dp"
+            android:layout_width="240dp"
             android:layout_height="wrap_content"
             android:background="?popUpWindowBackground">
 
@@ -74,6 +74,7 @@
                     <ImageView
                         android:id="@+id/deleteHighlight"
                         style="@style/ImageViewTextSelectorMarker"
+                        android:visibility="gone"
                         app:srcCompat="@drawable/ic_highlight_delete" />
 
                     <ImageView

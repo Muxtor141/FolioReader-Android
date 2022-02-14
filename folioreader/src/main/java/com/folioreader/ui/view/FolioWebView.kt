@@ -98,6 +98,7 @@ class FolioWebView : WebView {
     private val popupRect = Rect()
     private var popupWindow = PopupWindow()
     private lateinit var viewTextSelection: View
+    private lateinit var viewDelete: View
     private var isScrollingCheckDuration: Int = 0
     private var isScrollingRunnable: Runnable? = null
     private var oldScrollX: Int = 0
@@ -243,6 +244,27 @@ class FolioWebView : WebView {
         }
 
         initViewTextSelection()
+        initViewDelete()
+    }
+
+    fun initViewDelete() {
+        Log.v(LOG_TAG, "-> initViewDelete")
+
+        val config = AppUtil.getSavedConfig(context)!!
+        val ctw = if (config.isNightMode) {
+            ContextThemeWrapper(context, R.style.FolioNightTheme)
+        } else {
+            ContextThemeWrapper(context, R.style.FolioDayTheme)
+        }
+
+        viewDelete = LayoutInflater.from(ctw).inflate(R.layout.popup_delete, null)
+
+        viewDelete.setOnClickListener {
+            Log.v(LOG_TAG, "-> onClick -> deleteHighlight")
+            dismissPopupWindow()
+            loadUrl("javascript:clearSelection()")
+            loadUrl("javascript:deleteThisHighlight()")
+        }
     }
 
     fun initViewTextSelection() {
@@ -262,7 +284,7 @@ class FolioWebView : WebView {
         }
 
         viewTextSelection = LayoutInflater.from(ctw).inflate(R.layout.text_selection, null)
-        viewTextSelection.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
+        viewTextSelection.measure(MeasureSpec.UNSPECIFIED, MeasureSpec.UNSPECIFIED)
 
         viewTextSelection.yellowHighlight.setOnClickListener {
             Log.v(LOG_TAG, "-> onClick -> yellowHighlight")
@@ -480,7 +502,7 @@ class FolioWebView : WebView {
                 val rectJson = JSONObject(value)
                 setSelectionRect(
                     rectJson.getInt("left"), rectJson.getInt("top"),
-                    rectJson.getInt("right"), rectJson.getInt("bottom")
+                    rectJson.getInt("right"), rectJson.getInt("bottom"), false
                 )
             }
             return false
@@ -528,7 +550,7 @@ class FolioWebView : WebView {
                 val rectJson = JSONObject(value)
                 setSelectionRect(
                     rectJson.getInt("left"), rectJson.getInt("top"),
-                    rectJson.getInt("right"), rectJson.getInt("bottom")
+                    rectJson.getInt("right"), rectJson.getInt("bottom"), false
                 )
             }
         }
@@ -655,7 +677,7 @@ class FolioWebView : WebView {
     }
 
     @JavascriptInterface
-    fun setSelectionRect(left: Int, top: Int, right: Int, bottom: Int) {
+    fun setSelectionRect(left: Int, top: Int, right: Int, bottom: Int, isClick: Boolean) {
 
         val currentSelectionRect = Rect()
         currentSelectionRect.left = (left * density).toInt()
@@ -665,7 +687,7 @@ class FolioWebView : WebView {
         Log.d(LOG_TAG, "-> setSelectionRect -> $currentSelectionRect")
 
         computeTextSelectionRect(currentSelectionRect)
-        uiHandler.post { showTextSelectionPopup() }
+        uiHandler.post { showTextSelectionPopup(if (isClick) viewDelete else viewTextSelection) }
     }
 
     private fun computeTextSelectionRect(currentSelectionRect: Rect) {
@@ -761,7 +783,7 @@ class FolioWebView : WebView {
         }
     }
 
-    private fun showTextSelectionPopup() {
+    private fun showTextSelectionPopup(view: View) {
         Log.v(LOG_TAG, "-> showTextSelectionPopup")
         Log.d(LOG_TAG, "-> showTextSelectionPopup -> To be laid out popupRect -> $popupRect")
 
@@ -779,7 +801,7 @@ class FolioWebView : WebView {
             if (oldScrollX == currentScrollX && oldScrollY == currentScrollY && !inTouchMode) {
                 Log.i(LOG_TAG, "-> Stopped scrolling, show Popup")
                 popupWindow.dismiss()
-                popupWindow = PopupWindow(viewTextSelection, WRAP_CONTENT, WRAP_CONTENT)
+                popupWindow = PopupWindow(view, WRAP_CONTENT, WRAP_CONTENT)
                 popupWindow.isClippingEnabled = false
                 popupWindow.showAtLocation(
                     this@FolioWebView, Gravity.NO_GRAVITY,
