@@ -270,11 +270,10 @@ class FolioWebView : WebView {
     fun initViewTextSelection() {
         Log.v(LOG_TAG, "-> initViewTextSelection")
 
-        val textSelectionMiddleDrawable = ContextCompat.getDrawable(
-            context,
-            R.drawable.abc_text_select_handle_middle_mtrl_dark
-        )
-        handleHeight = textSelectionMiddleDrawable?.intrinsicHeight ?: (24 * density).toInt()
+//        val textSelectionMiddleDrawable = ContextCompat.getDrawable(
+//            context,
+//            R.drawable.abc_text_select_handle_middle_mtrl_dark
+//        )
 
         val config = AppUtil.getSavedConfig(context)!!
         val ctw = if (config.isNightMode) {
@@ -678,6 +677,8 @@ class FolioWebView : WebView {
 
     @JavascriptInterface
     fun setSelectionRect(left: Int, top: Int, right: Int, bottom: Int, isClick: Boolean) {
+
+        handleHeight = if (isClick) 0  else (24 * density).toInt()
 
         val currentSelectionRect = Rect()
         currentSelectionRect.left = (left * density).toInt()
