@@ -60,7 +60,9 @@ class LoadingView : ConstraintLayout {
     fun updateTheme() {
         var config = getSavedConfig(context)
         if (config == null) config = Config()
-        UiUtil.setColorIntToDrawable(config.themeColor, progressBar!!.indeterminateDrawable)
+        progressBar?.indeterminateDrawable?.let{
+            UiUtil.setColorIntToDrawable(config.themeColor, it)
+        }
         if (config.isNightMode) {
             setBackgroundColor(ContextCompat.getColor(context, R.color.night_background_color))
         } else {
