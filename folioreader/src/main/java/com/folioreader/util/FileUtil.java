@@ -6,6 +6,7 @@ import android.content.res.Resources;
 import android.os.Environment;
 import android.text.TextUtils;
 import android.util.Log;
+
 import com.folioreader.Constants;
 import com.folioreader.ui.activity.FolioActivity;
 

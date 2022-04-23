@@ -103,6 +103,8 @@ dependencies {
     implementation "com.squareup.retrofit2:retrofit:$versions.retrofit"
     implementation "com.squareup.retrofit2:converter-jackson:$versions.retrofit"
     implementation "com.squareup.retrofit2:converter-gson:$versions.retrofit"
+    implementation "org.zeroturnaround:zt-zip:$versions.zip"
+    implementation "androidx.security:security-crypto:1.0.0"
 
     // R2 modules
     api("com.github.codetoart:r2-shared-kotlin:$versions.r2SharedKotlin") {

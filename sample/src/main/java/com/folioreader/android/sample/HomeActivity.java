@@ -50,6 +50,8 @@ public class HomeActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
+        EncryptorKt.encrypt(getApplicationContext());
+
         folioReader = FolioReader.get()
                 .setOnHighlightListener(this)
                 .setReadLocatorListener(this)
@@ -67,7 +69,20 @@ public class HomeActivity extends AppCompatActivity
                 config.setAllowedDirection(Config.AllowedDirection.VERTICAL_AND_HORIZONTAL);
 
                 folioReader.setConfig(config, true)
-                        .openBook(R.raw.accessible_epub_3);
+                        .openBook(R.raw.exterminatorul);
+            }
+        });
+
+        findViewById(R.id.btn_encrypted).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Config config = AppUtil.getSavedConfig(getApplicationContext());
+                if (config == null)
+                    config = new Config();
+                config.setAllowedDirection(Config.AllowedDirection.VERTICAL_AND_HORIZONTAL);
+
+                folioReader.setConfig(config, true)
+                        .openBook(getFilesDir().getPath() + "/encrypted.epub");
             }
         });
 

@@ -62,6 +62,7 @@ import com.folioreader.ui.view.*
 import com.folioreader.util.AppUtil
 import com.folioreader.util.FileUtil
 import com.folioreader.util.UiUtil
+import com.folioreader.util.parser.EncryptedEpubParser
 import org.greenrobot.eventbus.EventBus
 import org.readium.r2.shared.Link
 import org.readium.r2.shared.Publication
@@ -470,7 +471,7 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
 
         pubBox = when (extension) {
             Publication.EXTENSION.EPUB -> {
-                val epubParser = EpubParser()
+                val epubParser = EncryptedEpubParser(applicationContext)
                 epubParser.parse(path!!, "")
             }
             Publication.EXTENSION.CBZ -> {
