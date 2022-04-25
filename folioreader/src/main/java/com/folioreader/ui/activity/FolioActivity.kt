@@ -70,6 +70,7 @@ import org.readium.r2.streamer.parser.CbzParser
 import org.readium.r2.streamer.parser.EpubParser
 import org.readium.r2.streamer.parser.PubBox
 import org.readium.r2.streamer.server.Server
+import java.io.File
 import java.lang.ref.WeakReference
 
 class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControllerCallback,
@@ -101,7 +102,7 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
     private var mEpubRawId = 0
     private var mediaControllerFragment: MediaControllerFragment? = null
     private var direction: Config.Direction = Config.Direction.VERTICAL
-    private var portNumber: Int = Constants.DEFAULT_PORT_NUMBER
+    private var portNumber: Int = DEFAULT_PORT_NUMBER
     private var streamerUri: Uri? = null
 
     private var searchUri: Uri? = null
@@ -280,19 +281,7 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
         initActionBar()
         initMediaController()
 
-        if (ContextCompat.checkSelfPermission(
-                this@FolioActivity,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            ActivityCompat.requestPermissions(
-                this@FolioActivity,
-                Constants.getWriteExternalStoragePerms(),
-                Constants.WRITE_EXTERNAL_STORAGE_REQUEST
-            )
-        } else {
-            setupBook()
-        }
+        setupBook()
     }
 
     private fun initActionBar() {
@@ -483,7 +472,9 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
             }
         }
 
-        portNumber = intent.getIntExtra(FolioReader.EXTRA_PORT_NUMBER, Constants.DEFAULT_PORT_NUMBER)
+        File(cacheDir, "temp").delete()
+
+        portNumber = intent.getIntExtra(FolioReader.EXTRA_PORT_NUMBER, DEFAULT_PORT_NUMBER)
         portNumber = AppUtil.getAvailablePortNumber(portNumber)
 
         r2StreamerServer = Server(portNumber)
@@ -1029,17 +1020,6 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
                 spine!![currentChapterIndex].href, false, false
             )
         )
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
-        when (requestCode) {
-            Constants.WRITE_EXTERNAL_STORAGE_REQUEST -> if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                setupBook()
-            } else {
-                Toast.makeText(this, getString(R.string.cannot_access_epub_message), Toast.LENGTH_LONG).show()
-                finish()
-            }
-        }
     }
 
     override fun getDirection(): Config.Direction {

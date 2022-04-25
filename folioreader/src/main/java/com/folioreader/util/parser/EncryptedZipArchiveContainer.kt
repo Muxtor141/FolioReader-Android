@@ -1,34 +1,19 @@
 package com.folioreader.util.parser
 
 import android.content.Context
+import android.util.Log
 import androidx.security.crypto.EncryptedFile
 import androidx.security.crypto.MasterKeys
 import org.readium.r2.streamer.container.Container
 import org.zeroturnaround.zip.commons.IOUtils
-import java.io.ByteArrayOutputStream
-import java.io.File
-import java.io.FileInputStream
-import java.io.InputStream
+import java.io.*
 import java.net.URI
+import java.util.zip.ZipFile
 import java.util.zip.ZipInputStream
 
 interface EncryptedZipArchiveContainer : Container {
-    var zipFile: File
 
-    val fis: FileInputStream
-        get() {
-            val keyGenParameterSpec = MasterKeys.AES256_GCM_SPEC
-            val mainKeyAlias = MasterKeys.getOrCreate(keyGenParameterSpec)
-
-            val encryptedFile = EncryptedFile.Builder(
-                zipFile,
-                context,
-                mainKeyAlias,
-                EncryptedFile.FileEncryptionScheme.AES256_GCM_HKDF_4KB
-            ).build()
-
-            return encryptedFile.openFileInput()
-        }
+    val zipFile: ZipFile
 
     override fun data(relativePath: String): ByteArray {
 
@@ -45,7 +30,7 @@ interface EncryptedZipArchiveContainer : Container {
     }
 
     override fun dataLength(relativePath: String): Long {
-        return zipFile.length()
+            return zipFile.size().toLong()
     }
 
     override fun dataInputStream(relativePath: String): InputStream {
@@ -60,16 +45,17 @@ interface EncryptedZipArchiveContainer : Container {
             relativePath
         }
 
-        val zis = ZipInputStream(fis)
-
-        var entry = zis.nextEntry
-        while (entry != null) {
-            if (path.equals(entry.name, true))
-                return zis
-            entry = zis.nextEntry
+        var zipEntry = zipFile.getEntry(path)
+        if (zipEntry == null) {
+            val zipEntries = zipFile.entries()
+            while (zipEntries.hasMoreElements()) {
+                zipEntry = zipEntries.nextElement()
+                if (path.equals(zipEntry.name, true))
+                    break
+            }
         }
 
-        return zis
+        return zipFile.getInputStream(zipEntry)
     }
 
     val context: Context

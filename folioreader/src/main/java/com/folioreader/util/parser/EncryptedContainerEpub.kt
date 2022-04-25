@@ -1,6 +1,9 @@
 package com.folioreader.util.parser
 
 import android.content.Context
+import android.util.Log
+import androidx.security.crypto.EncryptedFile
+import androidx.security.crypto.MasterKeys
 import org.readium.r2.shared.Link
 import org.readium.r2.shared.RootFile
 import org.readium.r2.shared.drm.Drm
@@ -9,11 +12,14 @@ import org.readium.r2.streamer.container.EpubContainer
 import org.readium.r2.streamer.parser.lcplFilePath
 import org.readium.r2.streamer.parser.mimetype
 import org.zeroturnaround.zip.ZipUtil
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.InputStream
 import java.util.zip.ZipFile
 import java.util.zip.ZipInputStream
 
-class EncryptedContainerEpub(override val context: Context, path: String) : EpubContainer, EncryptedZipArchiveContainer {
+class EncryptedContainerEpub(override val context: Context, private val path: String) : EpubContainer, EncryptedZipArchiveContainer {
 
     override fun xmlDocumentForFile(relativePath: String): XmlParser {
         val containerData = data(relativePath)
@@ -38,26 +44,32 @@ class EncryptedContainerEpub(override val context: Context, path: String) : Epub
     }
 
     override var rootFile = RootFile(path, mimetype)
-    override var zipFile = File(path)
+
     override var drm: Drm? = null
     override var successCreated: Boolean = false
 
-    init {
+    private val mainKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
 
+    override val zipFile: ZipFile
+
+    init {
         if (File(path).exists()) {
             successCreated = true
         }
+
+        val inputStream = EncryptedFile.Builder(
+            File(path),
+            context,
+            mainKeyAlias,
+            EncryptedFile.FileEncryptionScheme.AES256_GCM_HKDF_4KB
+        ).build().openFileInput()
+
+        val file = File(context.cacheDir, "temp")
+        file.writeBytes(inputStream.readBytes())
+        zipFile = ZipFile(file.path)
     }
 
     override fun scanForDrm(): Drm? {
-
-//        val zis = ZipInputStream(fis)
-//
-//        var entry = zis.nextEntry
-//        while (entry != null) {
-//            if (entry.name == lcplFilePath) return Drm(Drm.Brand.Lcp)
-//            entry = zis.nextEntry
-//        }
 
         return null
     }
