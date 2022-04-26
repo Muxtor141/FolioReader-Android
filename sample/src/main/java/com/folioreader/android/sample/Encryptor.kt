@@ -23,10 +23,9 @@ fun encrypt(context: Context) {
 
     val originalFile = File(context.filesDir, "original.epub")
 
-    encryptedFile.openFileOutput().apply {
-//        write("Hello World".toByteArray())
-        write(originalFile.readBytes())
-        flush()
-        close()
+    encryptedFile.openFileOutput().use { output ->
+        originalFile.inputStream().use { input ->
+            input.copyTo(output)
+        }
     }
 }

@@ -9,17 +9,12 @@ import org.readium.r2.shared.RootFile
 import org.readium.r2.shared.drm.Drm
 import org.readium.r2.shared.parser.xml.XmlParser
 import org.readium.r2.streamer.container.EpubContainer
-import org.readium.r2.streamer.parser.lcplFilePath
 import org.readium.r2.streamer.parser.mimetype
-import org.zeroturnaround.zip.ZipUtil
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
 import java.io.File
-import java.io.InputStream
 import java.util.zip.ZipFile
-import java.util.zip.ZipInputStream
 
-class EncryptedContainerEpub(override val context: Context, private val path: String) : EpubContainer, EncryptedZipArchiveContainer {
+class EncryptedContainerEpub(override val context: Context, private val path: String) :
+    EpubContainer, EncryptedZipArchiveContainer {
 
     override fun xmlDocumentForFile(relativePath: String): XmlParser {
         val containerData = data(relativePath)
@@ -65,7 +60,13 @@ class EncryptedContainerEpub(override val context: Context, private val path: St
         ).build().openFileInput()
 
         val file = File(context.cacheDir, "temp")
-        file.writeBytes(inputStream.readBytes())
+
+        inputStream.use { input ->
+            file.outputStream().use { output ->
+                input.copyTo(output)
+            }
+        }
+
         zipFile = ZipFile(file.path)
     }
 

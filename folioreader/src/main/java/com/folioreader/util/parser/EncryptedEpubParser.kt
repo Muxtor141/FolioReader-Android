@@ -91,9 +91,9 @@ class EncryptedEpubParser(private val context: Context) : PublicationParser {
         val publication = opfParser.parseOpf(xmlParser, container.rootFile.rootFilePath, epubVersion)
                 ?: return null
 
-        val drm = container.scanForDrm()
-
-        parseEncryption(container, publication, drm)
+//        val drm = container.scanForDrm()
+//
+//        parseEncryption(container, publication, drm)
 
 //        val fetcher = Fetcher(publication, container)
         parseNavigationDocument(container, publication)
@@ -106,7 +106,9 @@ class EncryptedEpubParser(private val context: Context) : PublicationParser {
          */
         setLayoutStyle(publication)
 
-        container.drm = drm
+//        container.drm = drm
+
+        File(context.cacheDir, "temp").delete()
         return PubBox(publication, container)
     }
 
