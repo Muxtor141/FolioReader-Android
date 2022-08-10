@@ -1,23 +1,18 @@
 package com.folioreader.ui.view
 
 import android.content.Context
-import com.folioreader.util.AppUtil.Companion.getSavedConfig
-import androidx.constraintlayout.widget.ConstraintLayout
-import android.widget.ProgressBar
-import android.view.LayoutInflater
-import com.folioreader.R
-import android.content.res.TypedArray
 import android.os.Handler
 import android.util.AttributeSet
-import com.folioreader.util.AppUtil
-import com.folioreader.util.UiUtil
-import androidx.core.content.ContextCompat
+import android.view.LayoutInflater
 import android.webkit.JavascriptInterface
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.ContextCompat
 import com.folioreader.Config
+import com.folioreader.R
 import com.folioreader.ui.view.LoadingView
+import com.folioreader.util.AppUtil.Companion.getSavedConfig
 
 class LoadingView : ConstraintLayout {
-    private var progressBar: ProgressBar? = null
     var maxVisibleDuration = -1
     private var mHandler: Handler? = null
     private val hideRunnable = Runnable { hide() }
@@ -50,7 +45,6 @@ class LoadingView : ConstraintLayout {
         )
         maxVisibleDuration = typedArray.getInt(R.styleable.LoadingView_maxVisibleDuration, -1)
         mHandler = Handler()
-        progressBar = findViewById(R.id.progressBar)
         isClickable = true
         isFocusable = true
         updateTheme()
@@ -60,9 +54,6 @@ class LoadingView : ConstraintLayout {
     fun updateTheme() {
         var config = getSavedConfig(context)
         if (config == null) config = Config()
-        progressBar?.indeterminateDrawable?.let{
-            UiUtil.setColorIntToDrawable(config.themeColor, it)
-        }
         if (config.isNightMode) {
             setBackgroundColor(ContextCompat.getColor(context, R.color.night_background_color))
         } else {
