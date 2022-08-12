@@ -9,7 +9,6 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import com.folioreader.Config
 import com.folioreader.R
-import com.folioreader.ui.view.LoadingView
 import com.folioreader.util.AppUtil.Companion.getSavedConfig
 
 class LoadingView : ConstraintLayout {
