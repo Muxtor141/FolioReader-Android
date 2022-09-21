@@ -12,6 +12,10 @@
         <item name="actionBarStyle">@style/FolioActivityNightTheme.ActionBarStyle</item>
         <item name="toolbarStyle">@style/ToolbarStyle</item>
         <item name="android:windowBackground">@color/webview_night</item>
+
+        <item name="android:windowLayoutInDisplayCutoutMode" tools:targetApi="o_mr1">shortEdges</item>
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowTranslucentNavigation">true</item>
     </style>
 
     <style name="FolioActivityNightTheme.ActionBarStyle" parent="@style/Widget.AppCompat.ActionBar.Solid">
