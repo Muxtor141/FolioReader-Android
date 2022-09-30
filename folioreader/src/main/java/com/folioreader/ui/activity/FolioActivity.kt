@@ -15,14 +15,12 @@
  */
 package com.folioreader.ui.activity
 
-import android.Manifest
 import android.app.Activity
 import android.app.ActivityManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.content.pm.PackageManager
 import android.graphics.Rect
 import android.graphics.drawable.ColorDrawable
 import android.net.Uri
@@ -36,12 +34,10 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.WindowManager
-import android.widget.Toast
 import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.Toolbar
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.folioreader.Config
@@ -67,10 +63,8 @@ import org.greenrobot.eventbus.EventBus
 import org.readium.r2.shared.Link
 import org.readium.r2.shared.Publication
 import org.readium.r2.streamer.parser.CbzParser
-import org.readium.r2.streamer.parser.EpubParser
 import org.readium.r2.streamer.parser.PubBox
 import org.readium.r2.streamer.server.Server
-import java.io.File
 import java.lang.ref.WeakReference
 
 class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControllerCallback,
@@ -270,12 +264,12 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
         }
 
         mBookId = intent.getStringExtra(FolioReader.EXTRA_BOOK_ID)
-        mEpubSourceType = intent.extras!!.getSerializable(FolioActivity.INTENT_EPUB_SOURCE_TYPE) as EpubSourceType
+        mEpubSourceType = intent.extras!!.getSerializable(INTENT_EPUB_SOURCE_TYPE) as EpubSourceType
         if (mEpubSourceType == EpubSourceType.RAW) {
-            mEpubRawId = intent.extras!!.getInt(FolioActivity.INTENT_EPUB_SOURCE_PATH)
+            mEpubRawId = intent.extras!!.getInt(INTENT_EPUB_SOURCE_PATH)
         } else {
             mEpubFilePath = intent.extras!!
-                .getString(FolioActivity.INTENT_EPUB_SOURCE_PATH)
+                .getString(INTENT_EPUB_SOURCE_PATH)
         }
 
         initActionBar()
@@ -293,7 +287,7 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
 
         val config = AppUtil.getSavedConfig(applicationContext)!!
 
-        val drawable = ContextCompat.getDrawable(this, R.drawable.ic_drawer)
+        val drawable = ContextCompat.getDrawable(this, R.drawable.ic_back)
         UiUtil.setColorIntToDrawable(config.themeColor, drawable!!)
         toolbar!!.navigationIcon = drawable
 
@@ -304,13 +298,12 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            val color: Int
-            if (config.isNightMode) {
-                color = ContextCompat.getColor(this, R.color.black)
+            val color: Int = if (config.isNightMode) {
+                ContextCompat.getColor(this, R.color.black)
             } else {
                 val attrs = intArrayOf(android.R.attr.navigationBarColor)
                 val typedArray = theme.obtainStyledAttributes(attrs)
-                color = typedArray.getColor(0, ContextCompat.getColor(this, R.color.white))
+                typedArray.getColor(0, ContextCompat.getColor(this, R.color.white))
             }
             window.navigationBarColor = color
         }
@@ -361,38 +354,44 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         //Log.d(LOG_TAG, "-> onOptionsItemSelected -> " + item.getItemId());
-
         val itemId = item.itemId
 
-        if (itemId == android.R.id.home) {
-            Log.v(LOG_TAG, "-> onOptionsItemSelected -> drawer")
-            startContentHighlightActivity()
-            return true
-
-        } else if (itemId == R.id.itemSearch) {
-            Log.v(LOG_TAG, "-> onOptionsItemSelected -> " + item.title)
-            if (searchUri == null)
+        when (itemId) {
+            android.R.id.home -> {
+                finish()
                 return true
-            val intent = Intent(this, SearchActivity::class.java)
-            intent.putExtra(SearchActivity.BUNDLE_SPINE_SIZE, spine?.size ?: 0)
-            intent.putExtra(SearchActivity.BUNDLE_SEARCH_URI, searchUri)
-            intent.putExtra(SearchAdapter.DATA_BUNDLE, searchAdapterDataBundle)
-            intent.putExtra(SearchActivity.BUNDLE_SAVE_SEARCH_QUERY, searchQuery)
-            startActivityForResult(intent, RequestCode.SEARCH.value)
-            return true
+            }
+            R.id.itemSearch -> {
+                Log.v(LOG_TAG, "-> onOptionsItemSelected -> " + item.title)
+                if (searchUri == null)
+                    return true
+                val intent = Intent(this, SearchActivity::class.java)
+                intent.putExtra(SearchActivity.BUNDLE_SPINE_SIZE, spine?.size ?: 0)
+                intent.putExtra(SearchActivity.BUNDLE_SEARCH_URI, searchUri)
+                intent.putExtra(SearchAdapter.DATA_BUNDLE, searchAdapterDataBundle)
+                intent.putExtra(SearchActivity.BUNDLE_SAVE_SEARCH_QUERY, searchQuery)
+                startActivityForResult(intent, RequestCode.SEARCH.value)
+                return true
 
-        } else if (itemId == R.id.itemConfig) {
-            Log.v(LOG_TAG, "-> onOptionsItemSelected -> " + item.title)
-            showConfigBottomSheetDialogFragment()
-            return true
-
-        } else if (itemId == R.id.itemTts) {
-            Log.v(LOG_TAG, "-> onOptionsItemSelected -> " + item.title)
-            showMediaController()
-            return true
+            }
+            R.id.itemConfig -> {
+                Log.v(LOG_TAG, "-> onOptionsItemSelected -> " + item.title)
+                showConfigBottomSheetDialogFragment()
+                return true
+            }
+            R.id.itemContents -> {
+                Log.v(LOG_TAG, "-> onOptionsItemSelected -> drawer")
+                startContentHighlightActivity()
+                return true
+            }
+            R.id.itemTts -> {
+                Log.v(LOG_TAG, "-> onOptionsItemSelected -> " + item.title)
+                showMediaController()
+                return true
+            }
+            else -> return super.onOptionsItemSelected(item)
         }
 
-        return super.onOptionsItemSelected(item)
     }
 
     fun startContentHighlightActivity() {
@@ -778,6 +777,7 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
 
         if (requestCode == RequestCode.SEARCH.value) {
             Log.v(LOG_TAG, "-> onActivityResult -> " + RequestCode.SEARCH)
@@ -808,11 +808,11 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
             val type = data.getStringExtra(TYPE)
 
             if (type == CHAPTER_SELECTED) {
-                goToChapter(data.getStringExtra(SELECTED_CHAPTER_POSITION))
+                goToChapter(data.getStringExtra(SELECTED_CHAPTER_POSITION)!!)
 
             } else if (type == HIGHLIGHT_SELECTED) {
                 val highlightImpl = data.getParcelableExtra<HighlightImpl>(HIGHLIGHT_ITEM)
-                currentChapterIndex = highlightImpl.pageNumber
+                currentChapterIndex = highlightImpl!!.pageNumber
                 mFolioPageViewPager!!.currentItem = currentChapterIndex
                 val folioPageFragment = currentFragment ?: return
                 folioPageFragment.scrollToHighlightId(highlightImpl.rangy)
@@ -977,21 +977,17 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
         val overrideConfig = intent.getBooleanExtra(Config.EXTRA_OVERRIDE_CONFIG, false)
         val savedConfig = AppUtil.getSavedConfig(this)
 
-        if (savedInstanceState != null) {
-            config = savedConfig
+        config = if (savedInstanceState != null) {
+            savedConfig
 
         } else if (savedConfig == null) {
-            if (intentConfig == null) {
-                config = Config()
-            } else {
-                config = intentConfig
-            }
+            intentConfig ?: Config()
 
         } else {
             if (intentConfig != null && overrideConfig) {
-                config = intentConfig
+                intentConfig
             } else {
-                config = savedConfig
+                savedConfig
             }
         }
 

@@ -98,6 +98,7 @@
     <string name="html_mime_type" translatable="false">text/html</string>
 
     <string name="menu_item_search">Qidiruv</string>
+    <string name="menu_item_contents">Mundarija</string>
     <string name="menu_item_config">Konfiguratsiya</string>
     <string name="menu_item_tts">Text To Speech</string>
 

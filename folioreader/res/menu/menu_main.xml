@@ -13,7 +13,14 @@
 
     <item
         android:id="@+id/itemConfig"
-        android:icon="@drawable/icon_font"
+        android:icon="@drawable/ic_drawer"
+        android:title="@string/menu_item_contents"
+        app:showAsAction="ifRoom"
+        tools:showAsAction="always" />
+
+    <item
+        android:id="@+id/itemContents"
+        android:icon="@drawable/ic_menu"
         android:title="@string/menu_item_config"
         app:showAsAction="ifRoom"
         tools:showAsAction="always" />
