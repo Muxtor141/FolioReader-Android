@@ -29,4 +29,10 @@
     <color name="highlight_blue">#ADD8FF</color>
     <color name="highlight_pink">#FFB0CA</color>
 
+    <color name="grey">#7C8783</color>
+    <color name="view_bottom_sheet_card_text">#4D5250</color>
+    <color name="view_bottom_sheet_item_selected">#25AA99</color>
+    <color name="view_bottom_sheet_item">#DADFDD</color>
+    <color name="view_bottom_sheet_item_grey">#FAFCFB</color>
+
 </resources>
