@@ -80,7 +80,7 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
     }
 
     private fun initViews() {
-        brightnessPermissionCode(requireContext())
+        configBrightness()
         inflateView()
         configFonts()
         configFontSize()
@@ -126,18 +126,6 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
         }
     }
 
-    private fun brightnessPermissionCode(context: Context) {
-        val permission: Boolean =
-            Settings.System.canWrite(context)
-        if (permission) {
-            configBrightness()
-        } else {
-            val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS)
-            intent.data = Uri.parse("package:" + context.packageName)
-            startActivityForResult(intent, writePermission)
-        }
-    }
-
     private fun configBrightness() {
         size_seek_bar.max = 255
         size_seek_bar.keyProgressIncrement = 1
@@ -146,23 +134,26 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
         size_seek_bar.progress = brightness
         size_seek_bar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                if (Settings.System.canWrite(context).not()) return
                 Settings.System.putInt(
                     context?.contentResolver,
                     Settings.System.SCREEN_BRIGHTNESS,
                     brightness
                 )
-                val layoutpars = activity!!.window.attributes
-
-                layoutpars.screenBrightness = brightness / 255f
-
-                activity!!.window.attributes = layoutpars
+                val layoutParams = activity!!.window.attributes
+                layoutParams.screenBrightness = brightness / 255f
+                activity!!.window.attributes = layoutParams
             }
 
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                brightness = if (progress <= 20) 20 else progress
+                brightness = max(20, progress)
             }
 
             override fun onStartTrackingTouch(seekBar: SeekBar?) {
+                if (Settings.System.canWrite(requireContext())) return
+                val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS)
+                intent.data = Uri.parse("package:" + requireContext().packageName)
+                startActivityForResult(intent, writePermission)
             }
         })
     }
@@ -195,6 +186,22 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
             }
         }
 
+        fun setDirection(direction : Config.Direction) {
+            listOf(
+                Config.Direction.HORIZONTAL to card_orientation_horizontal,
+                Config.Direction.VERTICAL to card_orientation_vertical
+            ).forEach {
+                val color = if (it.first == direction) {
+                    R.color.view_bottom_sheet_item_selected
+                } else {
+                    R.color.view_bottom_sheet_item
+                }
+                it.second.strokeColor = ResourcesCompat.getColor(resources, color, null)
+            }
+        }
+
+        setDirection(activityCallback.direction)
+
         if (activityCallback.direction == Config.Direction.HORIZONTAL) {
             card_orientation_horizontal.isSelected = true
         } else if (activityCallback.direction == Config.Direction.VERTICAL) {
@@ -207,6 +214,7 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
             activityCallback.onDirectionChange(Config.Direction.VERTICAL)
             card_orientation_horizontal.isSelected = false
             card_orientation_vertical.isSelected = true
+            setDirection(Config.Direction.VERTICAL)
         }
 
         card_orientation_horizontal.setOnClickListener {
@@ -216,6 +224,7 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
             activityCallback.onDirectionChange(Config.Direction.HORIZONTAL)
             card_orientation_horizontal.isSelected = true
             card_orientation_vertical.isSelected = false
+            setDirection(Config.Direction.HORIZONTAL)
         }
     }
 
@@ -276,7 +285,7 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
             val color = if (it.first == font) {
                 R.color.view_bottom_sheet_item_selected
             } else {
-                R.color.gray_text
+                R.color.view_bottom_sheet_item
             }
             it.third.strokeColor = ResourcesCompat.getColor(resources, color, null)
         }
@@ -366,10 +375,11 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
             text_size.setTextColor(ContextCompat.getColor(context!!, R.color.black))
             text_orientation.setTextColor(ContextCompat.getColor(context!!, R.color.black))
 
+
             card_normal.strokeColor =
                 ContextCompat.getColor(context!!, R.color.view_bottom_sheet_item_selected)
             card_dark.strokeColor =
-                ContextCompat.getColor(context!!, R.color.view_bottom_sheet_item)
+                ContextCompat.getColor(context!!, R.color.black)
 
             card_font_andada.background.setTint(
                 ContextCompat.getColor(
@@ -444,7 +454,7 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
             text_orientation.setTextColor(ContextCompat.getColor(context!!, R.color.white))
 
             card_normal.strokeColor =
-                ContextCompat.getColor(context!!, R.color.view_bottom_sheet_item)
+                ContextCompat.getColor(context!!, R.color.day_background_color)
             card_dark.strokeColor =
                 ContextCompat.getColor(context!!, R.color.view_bottom_sheet_item_selected)
 
