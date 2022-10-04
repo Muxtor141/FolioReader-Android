@@ -129,20 +129,16 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
     private fun configBrightness() {
         size_seek_bar.max = 255
         size_seek_bar.keyProgressIncrement = 1
-        brightness =
-            Settings.System.getInt(context?.contentResolver, Settings.System.SCREEN_BRIGHTNESS, 0)
+        if (brightness > 0) {
+            setBrightness()
+        } else {
+            brightness =
+                Settings.System.getInt(context?.contentResolver, Settings.System.SCREEN_BRIGHTNESS, 0)
+        }
         size_seek_bar.progress = brightness
         size_seek_bar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
-                if (Settings.System.canWrite(context).not()) return
-                Settings.System.putInt(
-                    context?.contentResolver,
-                    Settings.System.SCREEN_BRIGHTNESS,
-                    brightness
-                )
-                val layoutParams = activity!!.window.attributes
-                layoutParams.screenBrightness = brightness / 255f
-                activity!!.window.attributes = layoutParams
+                setBrightness()
             }
 
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
@@ -156,6 +152,18 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
                 startActivityForResult(intent, writePermission)
             }
         })
+    }
+
+    private fun setBrightness() {
+        if (Settings.System.canWrite(context).not()) return
+        Settings.System.putInt(
+            context?.contentResolver,
+            Settings.System.SCREEN_BRIGHTNESS,
+            brightness
+        )
+        val layoutParams = activity!!.window.attributes
+        layoutParams.screenBrightness = brightness / 255f
+        activity!!.window.attributes = layoutParams
     }
 
     private fun inflateView() {
