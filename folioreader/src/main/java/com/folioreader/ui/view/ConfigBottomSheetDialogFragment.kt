@@ -525,4 +525,12 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
             page.setTextColor((ContextCompat.getColor(context!!, R.color.black)))
         }
     }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == writePermission) {
+            configBrightness()
+        }
+    }
 }
