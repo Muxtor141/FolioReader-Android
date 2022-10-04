@@ -3,35 +3,36 @@ package com.folioreader.ui.view
 import android.animation.Animator
 import android.animation.ArgbEvaluator
 import android.animation.ValueAnimator
-import android.content.DialogInterface
-import android.os.Build
+import android.app.Dialog
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
 import android.widget.SeekBar
 import androidx.core.content.ContextCompat
-import androidx.fragment.app.Fragment
+import androidx.core.content.res.ResourcesCompat
 import com.folioreader.Config
 import com.folioreader.Constants
 import com.folioreader.R
 import com.folioreader.model.event.ReloadDataEvent
 import com.folioreader.ui.activity.FolioActivity
 import com.folioreader.ui.activity.FolioActivityCallback
-import com.folioreader.ui.fragment.MediaControllerFragment
 import com.folioreader.util.AppUtil
 import com.folioreader.util.UiUtil
-import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import kotlinx.android.synthetic.main.view_config.*
+import kotlinx.android.synthetic.main.view_bottom_sheet.*
 import org.greenrobot.eventbus.EventBus
-import kotlin.math.max
-import kotlin.math.min
+import java.lang.Integer.max
+import java.lang.Integer.min
+
 
 /**
- * Created by mobisys2 on 11/16/2016.
+ * Created by Yolo on 30/09/2016.
  */
 class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
 
@@ -45,29 +46,29 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
     private lateinit var config: Config
     private var isNightMode = false
     private lateinit var activityCallback: FolioActivityCallback
+    private var colorAnimation: ValueAnimator? = null
+    private var brightness: Int = 0
+    private val writePermission = 1001
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.view_config, container)
-    }
+    ): View? = inflater.inflate(R.layout.view_bottom_sheet, container, false)
+
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog =
+        BottomSheetDialog(requireContext(), theme).apply {
+            setOnShowListener {
+                this.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
+                    ?.setBackgroundResource(android.R.color.transparent)
+            }
+        }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         if (activity is FolioActivity)
             activityCallback = activity as FolioActivity
-
-        view.viewTreeObserver.addOnGlobalLayoutListener {
-            val dialog = dialog as BottomSheetDialog
-            val bottomSheet =
-                dialog.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet) as FrameLayout?
-            val behavior = BottomSheetBehavior.from(bottomSheet!!)
-            behavior.state = BottomSheetBehavior.STATE_EXPANDED
-            behavior.peekHeight = 0
-        }
 
         config = AppUtil.getSavedConfig(activity)!!
         initViews()
@@ -79,122 +80,173 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
     }
 
     private fun initViews() {
+        brightnessPermissionCode(requireContext())
         inflateView()
         configFonts()
-        view_config_font_size_seek_bar.progress = config.fontSize
-        configSeekBar()
+        configFontSize()
         selectFont(config.font, false)
+
         isNightMode = config.isNightMode
+
         if (isNightMode) {
-            container.setBackgroundColor(ContextCompat.getColor(context!!, R.color.night))
+            body.background.setTint(ContextCompat.getColor(context!!, R.color.night))
         } else {
-            container.setBackgroundColor(ContextCompat.getColor(context!!, R.color.white))
+            body.background.setTint(ContextCompat.getColor(context!!, R.color.white))
         }
 
         if (isNightMode) {
-            view_config_ib_day_mode.isSelected = false
-            view_config_ib_night_mode.isSelected = true
-            UiUtil.setColorIntToDrawable(config.themeColor, view_config_ib_night_mode.drawable)
-            UiUtil.setColorResToDrawable(R.color.app_gray, view_config_ib_day_mode.drawable)
+            card_normal.isSelected = false
+            card_dark.isSelected = true
         } else {
-            view_config_ib_day_mode.isSelected = true
-            view_config_ib_night_mode.isSelected = false
-            UiUtil.setColorIntToDrawable(config.themeColor, view_config_ib_day_mode!!.drawable)
-            UiUtil.setColorResToDrawable(R.color.app_gray, view_config_ib_night_mode.drawable)
+            card_normal.isSelected = true
+            card_dark.isSelected = false
         }
 
         activityCallback.loadingView.callback = { isLoading ->
             controlsEnabled(isLoading.not())
         }
+
+        setBackgroundColor(isNightMode.not())
+    }
+
+    private fun configFontSize() {
+        card_text_size_minus.setOnClickListener {
+            val size = max(0, config.fontSize - 1)
+            if (config.fontSize == size) return@setOnClickListener
+            config.fontSize = size
+            AppUtil.saveConfig(activity, config)
+            EventBus.getDefault().post(ReloadDataEvent())
+        }
+        card_text_size_add.setOnClickListener {
+            val size = min(4, config.fontSize + 1)
+            if (config.fontSize == size) return@setOnClickListener
+            config.fontSize = size
+            AppUtil.saveConfig(activity, config)
+            EventBus.getDefault().post(ReloadDataEvent())
+        }
+    }
+
+    private fun brightnessPermissionCode(context: Context) {
+        val permission: Boolean =
+            Settings.System.canWrite(context)
+        if (permission) {
+            configBrightness()
+        } else {
+            val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS)
+            intent.data = Uri.parse("package:" + context.packageName)
+            startActivityForResult(intent, writePermission)
+        }
+    }
+
+    private fun configBrightness() {
+        size_seek_bar.max = 255
+        size_seek_bar.keyProgressIncrement = 1
+        brightness =
+            Settings.System.getInt(context?.contentResolver, Settings.System.SCREEN_BRIGHTNESS, 0)
+        size_seek_bar.progress = brightness
+        size_seek_bar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                Settings.System.putInt(
+                    context?.contentResolver,
+                    Settings.System.SCREEN_BRIGHTNESS,
+                    brightness
+                )
+                val layoutpars = activity!!.window.attributes
+
+                layoutpars.screenBrightness = brightness / 255f
+
+                activity!!.window.attributes = layoutpars
+            }
+
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                brightness = if (progress <= 20) 20 else progress
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {
+            }
+        })
     }
 
     private fun inflateView() {
 
         if (config.allowedDirection != Config.AllowedDirection.VERTICAL_AND_HORIZONTAL) {
-            view5.visibility = View.GONE
-            buttonVertical.visibility = View.GONE
-            buttonHorizontal.visibility = View.GONE
+            text_orientation.visibility = View.GONE
+            card_orientation_vertical.visibility = View.GONE
+            card_orientation_horizontal.visibility = View.GONE
         }
 
-        view_config_ib_day_mode.setOnClickListener {
-            isNightMode = true
-            toggleBlackTheme()
-            view_config_ib_day_mode.isSelected = true
-            view_config_ib_night_mode.isSelected = false
-            setToolBarColor()
-            setAudioPlayerBackground()
-            UiUtil.setColorResToDrawable(R.color.app_gray, view_config_ib_night_mode.drawable)
-            UiUtil.setColorIntToDrawable(config.themeColor, view_config_ib_day_mode.drawable)
+        card_normal.setOnClickListener {
+            if (isNightMode) {
+                isNightMode = true
+                card_normal.isSelected = true
+                card_dark.isSelected = false
+                toggleBlackTheme()
+                setToolBarColor()
+            }
         }
 
-        view_config_ib_night_mode.setOnClickListener {
-            isNightMode = false
-            toggleBlackTheme()
-            view_config_ib_day_mode.isSelected = false
-            view_config_ib_night_mode.isSelected = true
-            UiUtil.setColorResToDrawable(R.color.app_gray, view_config_ib_day_mode.drawable)
-            UiUtil.setColorIntToDrawable(config.themeColor, view_config_ib_night_mode.drawable)
-            setToolBarColor()
-            setAudioPlayerBackground()
+        card_dark.setOnClickListener {
+            if (!isNightMode) {
+                isNightMode = false
+                card_normal.isSelected = false
+                card_dark.isSelected = true
+                toggleBlackTheme()
+                setToolBarColor()
+            }
         }
 
         if (activityCallback.direction == Config.Direction.HORIZONTAL) {
-            buttonHorizontal.isSelected = true
+            card_orientation_horizontal.isSelected = true
         } else if (activityCallback.direction == Config.Direction.VERTICAL) {
-            buttonVertical.isSelected = true
+            card_orientation_vertical.isSelected = true
         }
-
-        buttonVertical.setOnClickListener {
+        card_orientation_vertical.setOnClickListener {
             config = AppUtil.getSavedConfig(context)!!
             config.direction = Config.Direction.VERTICAL
             AppUtil.saveConfig(context, config)
             activityCallback.onDirectionChange(Config.Direction.VERTICAL)
-            buttonHorizontal.isSelected = false
-            buttonVertical.isSelected = true
+            card_orientation_horizontal.isSelected = false
+            card_orientation_vertical.isSelected = true
         }
 
-        buttonHorizontal.setOnClickListener {
+        card_orientation_horizontal.setOnClickListener {
             config = AppUtil.getSavedConfig(context)!!
             config.direction = Config.Direction.HORIZONTAL
             AppUtil.saveConfig(context, config)
             activityCallback.onDirectionChange(Config.Direction.HORIZONTAL)
-            buttonHorizontal.isSelected = true
-            buttonVertical.isSelected = false
+            card_orientation_horizontal.isSelected = true
+            card_orientation_vertical.isSelected = false
         }
     }
 
     private fun configFonts() {
-
         val colorStateList = UiUtil.getColorList(
             config.themeColor,
             ContextCompat.getColor(context!!, R.color.grey_color)
         )
-        buttonVertical.setTextColor(colorStateList)
-        buttonHorizontal.setTextColor(colorStateList)
-        view_config_font_andada.setTextColor(colorStateList)
-        view_config_font_lato.setTextColor(colorStateList)
-        view_config_font_lora.setTextColor(colorStateList)
-        view_config_font_raleway.setTextColor(colorStateList)
+        font_andada.setTextColor(colorStateList)
+        font_lato.setTextColor(colorStateList)
+        font_lora.setTextColor(colorStateList)
+        font_raleway.setTextColor(colorStateList)
 
-        view_config_font_andada.setOnClickListener { selectFont(Constants.FONT_ANDADA, true) }
-        view_config_font_lato.setOnClickListener { selectFont(Constants.FONT_LATO, true) }
-        view_config_font_lora.setOnClickListener { selectFont(Constants.FONT_LORA, true) }
-        view_config_font_raleway.setOnClickListener { selectFont(Constants.FONT_RALEWAY, true) }
+        font_andada.setOnClickListener { selectFont(Constants.FONT_ANDADA, true) }
+        font_lato.setOnClickListener { selectFont(Constants.FONT_LATO, true) }
+        font_lora.setOnClickListener { selectFont(Constants.FONT_LORA, true) }
+        font_raleway.setOnClickListener { selectFont(Constants.FONT_RALEWAY, true) }
     }
 
     private fun controlsEnabled(value: Boolean) {
         listOf(
-            view_config_font_andada,
-            view_config_font_lato,
-            view_config_font_lora,
-            view_config_font_raleway,
-            view_config_ib_day_mode,
-            view_config_ib_night_mode,
-            view_config_font_size_seek_bar,
-            view_config_iv_label_font_big,
-            view_config_iv_label_font_small,
-            buttonVertical,
-            buttonHorizontal
+            card_normal,
+            card_dark,
+            font_andada,
+            font_lato,
+            font_lora,
+            font_raleway,
+            card_text_size_minus,
+            card_text_size_add,
+            card_orientation_vertical,
+            card_orientation_horizontal
         ).forEach {
             it.isEnabled = value
             it.isClickable = value
@@ -202,12 +254,10 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
     }
 
     private fun selectFont(selectedFont: Int, isReloadNeeded: Boolean) {
-        when (selectedFont) {
-            Constants.FONT_ANDADA -> setSelectedFont(true, false, false, false)
-            Constants.FONT_LATO -> setSelectedFont(false, true, false, false)
-            Constants.FONT_LORA -> setSelectedFont(false, false, true, false)
-            Constants.FONT_RALEWAY -> setSelectedFont(false, false, false, true)
-        }
+        if (config.font == selectedFont) return
+
+        setSelectedFont(selectedFont)
+
         config.font = selectedFont
         if (isAdded && isReloadNeeded) {
             AppUtil.saveConfig(activity, config)
@@ -215,17 +265,24 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
         }
     }
 
-    private fun setSelectedFont(andada: Boolean, lato: Boolean, lora: Boolean, raleway: Boolean) {
-        view_config_font_andada.isSelected = andada
-        view_config_font_lato.isSelected = lato
-        view_config_font_lora.isSelected = lora
-        view_config_font_raleway.isSelected = raleway
+    private fun setSelectedFont(font: Int) {
+        listOf(
+            Triple(Constants.FONT_ANDADA, font_andada, card_font_andada),
+            Triple(Constants.FONT_LATO, font_lato, card_font_lato),
+            Triple(Constants.FONT_LORA, font_lora, card_font_lora),
+            Triple(Constants.FONT_RALEWAY, font_raleway, card_font_raleway)
+        ).forEach {
+            it.second.isSelected = it.first == font
+            val color = if (it.first == font) {
+                R.color.view_bottom_sheet_item_selected
+            } else {
+                R.color.gray_text
+            }
+            it.third.strokeColor = ResourcesCompat.getColor(resources, color, null)
+        }
     }
 
-    private var colorAnimation: ValueAnimator? = null
-
     private fun toggleBlackTheme() {
-
         val day = ContextCompat.getColor(context!!, R.color.white)
         val night = ContextCompat.getColor(context!!, R.color.night)
 
@@ -238,19 +295,21 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
 
         colorAnimation!!.addUpdateListener { animator ->
             val value = animator.animatedValue as Int
-            container.setBackgroundColor(value)
+            body.background.setTint(value)
         }
 
         val mActivity = activity
 
         colorAnimation!!.addListener(object : Animator.AnimatorListener {
-            override fun onAnimationStart(animator: Animator) {}
+            override fun onAnimationStart(animator: Animator) {
+                setBackgroundColor(isNightMode)
+                config.isNightMode = isNightMode.not()
+                AppUtil.saveConfig(mActivity, config)
+                EventBus.getDefault().post(ReloadDataEvent())
+            }
 
             override fun onAnimationEnd(animator: Animator) {
                 isNightMode = !isNightMode
-                config.isNightMode = isNightMode
-                AppUtil.saveConfig(mActivity, config)
-                EventBus.getDefault().post(ReloadDataEvent())
             }
 
             override fun onAnimationCancel(animator: Animator) {}
@@ -260,70 +319,29 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
 
         colorAnimation!!.duration = FADE_DAY_NIGHT_MODE.toLong()
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        val attrs = intArrayOf(android.R.attr.navigationBarColor)
+        val typedArray = activity?.theme?.obtainStyledAttributes(attrs)
+        val defaultNavigationBarColor = typedArray?.getColor(
+            0,
+            ContextCompat.getColor(context!!, R.color.white)
+        )
+        val black = ContextCompat.getColor(context!!, R.color.black)
 
-            val attrs = intArrayOf(android.R.attr.navigationBarColor)
-            val typedArray = activity?.theme?.obtainStyledAttributes(attrs)
-            val defaultNavigationBarColor = typedArray?.getColor(
-                0,
-                ContextCompat.getColor(context!!, R.color.white)
-            )
-            val black = ContextCompat.getColor(context!!, R.color.black)
+        val navigationColorAnim = ValueAnimator.ofObject(
+            ArgbEvaluator(),
+            if (isNightMode) black else defaultNavigationBarColor,
+            if (isNightMode) defaultNavigationBarColor else black
+        )
 
-            val navigationColorAnim = ValueAnimator.ofObject(
-                ArgbEvaluator(),
-                if (isNightMode) black else defaultNavigationBarColor,
-                if (isNightMode) defaultNavigationBarColor else black
-            )
-
-            navigationColorAnim.addUpdateListener { valueAnimator ->
-                val value = valueAnimator.animatedValue as Int
-                activity?.window?.navigationBarColor = value
-            }
-
-            navigationColorAnim.duration = FADE_DAY_NIGHT_MODE.toLong()
-            navigationColorAnim.start()
+        navigationColorAnim.addUpdateListener { valueAnimator ->
+            val value = valueAnimator.animatedValue as Int
+            activity?.window?.navigationBarColor = value
         }
+
+        navigationColorAnim.duration = FADE_DAY_NIGHT_MODE.toLong()
+        navigationColorAnim.start()
 
         colorAnimation!!.start()
-    }
-
-    private fun configSeekBar() {
-        val thumbDrawable = ContextCompat.getDrawable(activity!!, R.drawable.seekbar_thumb)
-        UiUtil.setColorIntToDrawable(config.themeColor, thumbDrawable)
-        UiUtil.setColorResToDrawable(
-            R.color.grey_color,
-            view_config_font_size_seek_bar.progressDrawable
-        )
-        view_config_font_size_seek_bar.thumb = thumbDrawable
-
-        fun setSize() {
-            config.fontSize = view_config_font_size_seek_bar.progress
-            AppUtil.saveConfig(activity, config)
-
-            EventBus.getDefault().post(ReloadDataEvent())
-        }
-
-        view_config_font_size_seek_bar.setOnSeekBarChangeListener(object :
-            SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {}
-            override fun onStartTrackingTouch(seekBar: SeekBar) {}
-            override fun onStopTrackingTouch(seekBar: SeekBar) {
-                setSize()
-            }
-        })
-
-        view_config_iv_label_font_small.setOnClickListener {
-            view_config_font_size_seek_bar.progress =
-                max(view_config_font_size_seek_bar.progress - 1, 0)
-            setSize()
-        }
-
-        view_config_iv_label_font_big.setOnClickListener {
-            view_config_font_size_seek_bar.progress =
-                min(view_config_font_size_seek_bar.progress + 1, 4)
-            setSize()
-        }
     }
 
     private fun setToolBarColor() {
@@ -334,23 +352,167 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
         }
     }
 
-    private fun setAudioPlayerBackground() {
-
-        var mediaControllerFragment: Fragment? =
-            fragmentManager?.findFragmentByTag(MediaControllerFragment.LOG_TAG)
-                ?: return
-        mediaControllerFragment = mediaControllerFragment as MediaControllerFragment
-        if (isNightMode) {
-            mediaControllerFragment.setDayMode()
-        } else {
-            mediaControllerFragment.setNightMode()
-        }
-    }
-
     override fun onDestroyView() {
         super.onDestroyView()
         activityCallback.loadingView?.callback = null
         colorAnimation?.removeAllUpdateListeners()
     }
 
+    private fun setBackgroundColor(isDay: Boolean) {
+        if (isDay) {
+            text_brightness.setTextColor(ContextCompat.getColor(context!!, R.color.black))
+            text_background.setTextColor(ContextCompat.getColor(context!!, R.color.black))
+            text_type.setTextColor(ContextCompat.getColor(context!!, R.color.black))
+            text_size.setTextColor(ContextCompat.getColor(context!!, R.color.black))
+            text_orientation.setTextColor(ContextCompat.getColor(context!!, R.color.black))
+
+            card_normal.strokeColor =
+                ContextCompat.getColor(context!!, R.color.view_bottom_sheet_item_selected)
+            card_dark.strokeColor =
+                ContextCompat.getColor(context!!, R.color.view_bottom_sheet_item)
+
+            card_font_andada.background.setTint(
+                ContextCompat.getColor(
+                    context!!,
+                    R.color.white
+                )
+            )
+            font_andada.setTextColor((ContextCompat.getColor(context!!, R.color.black)))
+
+            card_font_lato.background.setTint(ContextCompat.getColor(context!!, R.color.white))
+            font_lato.setTextColor((ContextCompat.getColor(context!!, R.color.black)))
+
+            card_font_lora.background.setTint(ContextCompat.getColor(context!!, R.color.white))
+            font_lora.setTextColor((ContextCompat.getColor(context!!, R.color.black)))
+
+            card_font_raleway.background.setTint(
+                ContextCompat.getColor(
+                    context!!,
+                    R.color.white
+                )
+            )
+            font_raleway.setTextColor((ContextCompat.getColor(context!!, R.color.black)))
+
+            card_text_size_minus.background.setTint(
+                ContextCompat.getColor(
+                    context!!,
+                    R.color.white
+                )
+            )
+            text_size_minus.setTextColor((ContextCompat.getColor(context!!, R.color.black)))
+
+            card_text_size_add.background.setTint(
+                ContextCompat.getColor(
+                    context!!,
+                    R.color.white
+                )
+            )
+            text_size_add.setTextColor((ContextCompat.getColor(context!!, R.color.black)))
+
+            card_orientation_vertical.background.setTint(
+                ContextCompat.getColor(
+                    context!!,
+                    R.color.white
+                )
+            )
+            orientation_vertical.setTextColor(
+                (ContextCompat.getColor(
+                    context!!,
+                    R.color.black
+                ))
+            )
+
+            card_orientation_horizontal.background.setTint(
+                ContextCompat.getColor(
+                    context!!,
+                    R.color.white
+                )
+            )
+            orientation_horizontal.setTextColor(
+                (ContextCompat.getColor(
+                    context!!,
+                    R.color.black
+                ))
+            )
+
+            page.setTextColor((ContextCompat.getColor(context!!, R.color.white)))
+        } else {
+            text_brightness.setTextColor(ContextCompat.getColor(context!!, R.color.white))
+            text_background.setTextColor(ContextCompat.getColor(context!!, R.color.white))
+            text_type.setTextColor(ContextCompat.getColor(context!!, R.color.white))
+            text_size.setTextColor(ContextCompat.getColor(context!!, R.color.white))
+            text_orientation.setTextColor(ContextCompat.getColor(context!!, R.color.white))
+
+            card_normal.strokeColor =
+                ContextCompat.getColor(context!!, R.color.view_bottom_sheet_item)
+            card_dark.strokeColor =
+                ContextCompat.getColor(context!!, R.color.view_bottom_sheet_item_selected)
+
+            card_font_andada.background.setTint(
+                ContextCompat.getColor(
+                    context!!,
+                    R.color.black
+                )
+            )
+            font_andada.setTextColor((ContextCompat.getColor(context!!, R.color.white)))
+
+            card_font_lato.background.setTint(ContextCompat.getColor(context!!, R.color.black))
+            font_lato.setTextColor((ContextCompat.getColor(context!!, R.color.white)))
+
+            card_font_lora.background.setTint(ContextCompat.getColor(context!!, R.color.black))
+            font_lora.setTextColor((ContextCompat.getColor(context!!, R.color.white)))
+
+            card_font_raleway.background.setTint(
+                ContextCompat.getColor(
+                    context!!,
+                    R.color.black
+                )
+            )
+            font_raleway.setTextColor((ContextCompat.getColor(context!!, R.color.white)))
+
+            card_text_size_minus.background.setTint(
+                ContextCompat.getColor(
+                    context!!,
+                    R.color.black
+                )
+            )
+            text_size_minus.setTextColor((ContextCompat.getColor(context!!, R.color.white)))
+
+            card_text_size_add.background.setTint(
+                ContextCompat.getColor(
+                    context!!,
+                    R.color.black
+                )
+            )
+            text_size_add.setTextColor((ContextCompat.getColor(context!!, R.color.white)))
+
+            card_orientation_vertical.background.setTint(
+                ContextCompat.getColor(
+                    context!!,
+                    R.color.black
+                )
+            )
+            orientation_vertical.setTextColor(
+                (ContextCompat.getColor(
+                    context!!,
+                    R.color.white
+                ))
+            )
+
+            card_orientation_horizontal.background.setTint(
+                ContextCompat.getColor(
+                    context!!,
+                    R.color.black
+                )
+            )
+            orientation_horizontal.setTextColor(
+                (ContextCompat.getColor(
+                    context!!,
+                    R.color.white
+                ))
+            )
+
+            page.setTextColor((ContextCompat.getColor(context!!, R.color.black)))
+        }
+    }
 }

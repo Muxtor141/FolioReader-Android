@@ -98,6 +98,7 @@
     <string name="html_mime_type" translatable="false">text/html</string>
 
     <string name="menu_item_search">Qidiruv</string>
+    <string name="menu_item_contents">Mundarija</string>
     <string name="menu_item_config">Konfiguratsiya</string>
     <string name="menu_item_tts">Text To Speech</string>
 
@@ -116,5 +117,15 @@
     <string name="callHighlightSearchLocator" translatable="false">javascript:highlightSearchLocator(\"%s\")</string>
     <string name="callClearSelection" translatable="false">javascript:clearSelection()</string>
     <string name="delete">Belgini o\'chirish</string>
+    <string name="view_bottom_sheet_text_brightness">Yorug\'lik</string>
+    <string name="view_bottom_sheet_text_background_color">Fon rangi</string>
+    <string name="view_bottom_sheet_aa">Aa</string>
+    <string name="view_bottom_sheet_text_type">Yozuv turi</string>
+    <string name="view_bottom_sheet_brightness_image">view_bottom_sheet_brightness_image</string>
+    <string name="view_bottom_sheet_brightness_fill_image">view_bottom_sheet_brightness_fill_image</string>
+    <string name="view_bottom_sheet_text_size">Yozuv kattaligi</string>
+    <string name="view_bottom_sheet_text_minus">A-</string>
+    <string name="view_bottom_sheet_text_add">A+</string>
+    <string name="view_bottom_sheet_text_orientation">"Yozuv kattaligi "</string>
 
 </resources>
