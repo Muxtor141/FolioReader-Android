@@ -129,7 +129,7 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
     private fun configBrightness() {
         size_seek_bar.max = 255
         size_seek_bar.keyProgressIncrement = 1
-        if (brightness > 0) {
+        if (brightness > 0 && Settings.System.canWrite(requireContext())) {
             setBrightness()
         } else {
             brightness =
