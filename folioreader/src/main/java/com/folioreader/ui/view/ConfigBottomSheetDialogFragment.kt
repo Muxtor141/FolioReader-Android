@@ -265,6 +265,7 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
             card_orientation_vertical,
             card_orientation_horizontal
         ).forEach {
+            it ?: return
             it.isEnabled = value
             it.isClickable = value
         }
