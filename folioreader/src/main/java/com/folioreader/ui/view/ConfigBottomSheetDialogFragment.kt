@@ -4,7 +4,6 @@ import android.animation.Animator
 import android.animation.ArgbEvaluator
 import android.animation.ValueAnimator
 import android.app.Dialog
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -45,6 +44,7 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
 
     private lateinit var config: Config
     private var isNightMode = false
+    private var isAlt = false
     private lateinit var activityCallback: FolioActivityCallback
     private var colorAnimation: ValueAnimator? = null
     private var brightness: Int = 0
@@ -87,6 +87,7 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
         selectFont(config.font, false)
 
         isNightMode = config.isNightMode
+        isAlt = config.isAlt
 
         if (isNightMode) {
             body.background.setTint(ContextCompat.getColor(context!!, R.color.night))
@@ -94,19 +95,11 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
             body.background.setTint(ContextCompat.getColor(context!!, R.color.white))
         }
 
-        if (isNightMode) {
-            card_normal.isSelected = false
-            card_dark.isSelected = true
-        } else {
-            card_normal.isSelected = true
-            card_dark.isSelected = false
-        }
-
         activityCallback.loadingView.callback = { isLoading ->
             controlsEnabled(isLoading.not())
         }
 
-        setBackgroundColor(isNightMode.not())
+        setBackgroundColor(isNightMode, isAlt)
     }
 
     private fun configFontSize() {
@@ -133,7 +126,11 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
             setBrightness()
         } else {
             brightness =
-                Settings.System.getInt(context?.contentResolver, Settings.System.SCREEN_BRIGHTNESS, 0)
+                Settings.System.getInt(
+                    context?.contentResolver,
+                    Settings.System.SCREEN_BRIGHTNESS,
+                    0
+                )
         }
         size_seek_bar.progress = brightness
         size_seek_bar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
@@ -175,26 +172,42 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
         }
 
         card_normal.setOnClickListener {
-            if (isNightMode) {
-                isNightMode = true
-                card_normal.isSelected = true
-                card_dark.isSelected = false
-                toggleBlackTheme()
-                setToolBarColor()
-            }
+            if (isNightMode.not() && isAlt.not()) return@setOnClickListener
+            val animate = isNightMode
+            isNightMode = false
+            isAlt = false
+            toggleTheme(animate)
+            setToolBarColor()
+        }
+
+        card_white.setOnClickListener {
+            if (isNightMode.not() && isAlt) return@setOnClickListener
+            val animate = isNightMode
+            isNightMode = false
+            isAlt = true
+            toggleTheme(animate)
+            setToolBarColor()
+        }
+
+        card_gray.setOnClickListener {
+            if (isNightMode && isAlt) return@setOnClickListener
+            val animate = isNightMode.not()
+            isNightMode = true
+            isAlt = true
+            toggleTheme(animate)
+            setToolBarColor()
         }
 
         card_dark.setOnClickListener {
-            if (!isNightMode) {
-                isNightMode = false
-                card_normal.isSelected = false
-                card_dark.isSelected = true
-                toggleBlackTheme()
-                setToolBarColor()
-            }
+            if (isNightMode && isAlt.not()) return@setOnClickListener
+            val animate = isNightMode.not()
+            isNightMode = true
+            isAlt = false
+            toggleTheme(animate)
+            setToolBarColor()
         }
 
-        fun setDirection(direction : Config.Direction) {
+        fun setDirection(direction: Config.Direction) {
             listOf(
                 Config.Direction.HORIZONTAL to card_orientation_horizontal,
                 Config.Direction.VERTICAL to card_orientation_vertical
@@ -300,16 +313,16 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
         }
     }
 
-    private fun toggleBlackTheme() {
+    private fun toggleTheme(animate: Boolean) {
         val day = ContextCompat.getColor(context!!, R.color.white)
         val night = ContextCompat.getColor(context!!, R.color.night)
 
         colorAnimation = ValueAnimator.ofObject(
             ArgbEvaluator(),
-            if (isNightMode) night else day, if (isNightMode) day else night
+            if (isNightMode.not()) night else day, if (isNightMode.not()) day else night
         )
 
-        colorAnimation!!.duration = FADE_DAY_NIGHT_MODE.toLong()
+        colorAnimation!!.duration = if (animate) FADE_DAY_NIGHT_MODE.toLong() else 0L
 
         colorAnimation!!.addUpdateListener { animator ->
             val value = animator.animatedValue as Int
@@ -320,22 +333,21 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
 
         colorAnimation!!.addListener(object : Animator.AnimatorListener {
             override fun onAnimationStart(animator: Animator) {
-                setBackgroundColor(isNightMode)
-                config.isNightMode = isNightMode.not()
+                setBackgroundColor(isNightMode, isAlt)
+                config.isNightMode = isNightMode
+                config.isAlt = isAlt
                 AppUtil.saveConfig(mActivity, config)
                 EventBus.getDefault().post(ReloadDataEvent())
             }
 
-            override fun onAnimationEnd(animator: Animator) {
-                isNightMode = !isNightMode
-            }
+            override fun onAnimationEnd(animator: Animator) {}
 
             override fun onAnimationCancel(animator: Animator) {}
 
             override fun onAnimationRepeat(animator: Animator) {}
         })
 
-        colorAnimation!!.duration = FADE_DAY_NIGHT_MODE.toLong()
+        colorAnimation!!.duration = if (animate) FADE_DAY_NIGHT_MODE.toLong() else 0L
 
         val attrs = intArrayOf(android.R.attr.navigationBarColor)
         val typedArray = activity?.theme?.obtainStyledAttributes(attrs)
@@ -356,7 +368,7 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
             activity?.window?.navigationBarColor = value
         }
 
-        navigationColorAnim.duration = FADE_DAY_NIGHT_MODE.toLong()
+        navigationColorAnim.duration = if (animate) FADE_DAY_NIGHT_MODE.toLong() else 0L
         navigationColorAnim.start()
 
         colorAnimation!!.start()
@@ -376,19 +388,24 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
         colorAnimation?.removeAllUpdateListeners()
     }
 
-    private fun setBackgroundColor(isDay: Boolean) {
-        if (isDay) {
+    private val Int.dp get() = UiUtil.convertDpToPixel(toFloat(), requireContext()).toInt()
+
+    private fun setBackgroundColor(isNightMode: Boolean, isAlt: Boolean) {
+
+        val selected = ContextCompat.getColor(requireContext(), R.color.view_bottom_sheet_item_selected)
+        val unselected = ContextCompat.getColor(requireContext(), android.R.color.transparent)
+        card_normal.strokeColor = if (isNightMode.not() && isAlt.not()) selected else unselected
+        card_white.strokeColor = if (isNightMode.not() && isAlt) selected else unselected
+        card_gray.strokeColor = if (isNightMode && isAlt) selected else unselected
+        card_dark.strokeColor = if (isNightMode && isAlt.not()) selected else unselected
+
+        if (isNightMode.not()) {
             text_brightness.setTextColor(ContextCompat.getColor(context!!, R.color.black))
             text_background.setTextColor(ContextCompat.getColor(context!!, R.color.black))
             text_type.setTextColor(ContextCompat.getColor(context!!, R.color.black))
             text_size.setTextColor(ContextCompat.getColor(context!!, R.color.black))
             text_orientation.setTextColor(ContextCompat.getColor(context!!, R.color.black))
 
-
-            card_normal.strokeColor =
-                ContextCompat.getColor(context!!, R.color.view_bottom_sheet_item_selected)
-            card_dark.strokeColor =
-                ContextCompat.getColor(context!!, R.color.black)
 
             card_font_andada.background.setTint(
                 ContextCompat.getColor(
@@ -461,11 +478,6 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
             text_type.setTextColor(ContextCompat.getColor(context!!, R.color.white))
             text_size.setTextColor(ContextCompat.getColor(context!!, R.color.white))
             text_orientation.setTextColor(ContextCompat.getColor(context!!, R.color.white))
-
-            card_normal.strokeColor =
-                ContextCompat.getColor(context!!, R.color.day_background_color)
-            card_dark.strokeColor =
-                ContextCompat.getColor(context!!, R.color.view_bottom_sheet_item_selected)
 
             card_font_andada.background.setTint(
                 ContextCompat.getColor(

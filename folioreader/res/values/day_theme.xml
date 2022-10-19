@@ -25,7 +25,7 @@
 
     <!-- FolioDayTheme -->
 
-    <color name="day_background_color">#F8F2E5</color>
+    <color name="day_background_color">#f5f1e5</color>
     <color name="day_popup_window_background">@color/white</color>
     <color name="day_default_font_color">#000000</color>
     <color name="day_highlight_delete_fill_color">#333333</color>

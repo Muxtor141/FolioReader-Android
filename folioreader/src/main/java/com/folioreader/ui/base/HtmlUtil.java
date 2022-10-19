@@ -81,6 +81,10 @@ public final class HtmlUtil {
             classes += " nightMode";
         }
 
+        if (config.isAlt()) {
+            classes += " alt";
+        }
+
         switch (config.getFontSize()) {
             case 0:
                 classes += " textSizeOne";

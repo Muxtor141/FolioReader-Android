@@ -196,7 +196,11 @@ html .highlight_yellow, html .highlight_green, html .highlight_blue, html .highl
  */
 
 html {
-    background-color: #F8F2E5 !important;
+    background-color: #f5f1e5 !important;
+}
+
+html.alt {
+    background-color: #fff !important;
 }
 
 body {
@@ -204,16 +208,20 @@ body {
 }
 
 html.nightMode {
-    background-color: #131313 !important;
+    background-color: #010101 !important;
+}
+
+html.nightMode.alt {
+    background-color: #2e2c2d !important;
 }
 
 .nightMode p, .nightMode div {
-    color: #767676 !important;
+    color: #fff !important;
     background-color: transparent !important;
 }
 
 .nightMode h1, .nightMode h2, .nightMode h3, .nightMode h4, .nightMode h5, .nightMode h6 {
-    color: #848484 !important;
+    color: #fff !important;
 }
 
 html.nightMode .highlight_yellow {background:rgba(255, 235, 107, 0.9)}
