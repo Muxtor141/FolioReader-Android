@@ -375,7 +375,7 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
     }
 
     private fun setToolBarColor() {
-        if (isNightMode) {
+        if (isNightMode.not()) {
             activityCallback.setDayMode()
         } else {
             activityCallback.setNightMode()
