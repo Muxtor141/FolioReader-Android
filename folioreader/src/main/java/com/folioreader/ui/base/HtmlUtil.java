@@ -18,7 +18,7 @@ public final class HtmlUtil {
      * @param htmlContent input html raw data
      * @return modified raw html string
      */
-    public static String getHtmlContent(Context context, String htmlContent, Config config, Boolean notch) {
+    public static String getHtmlContent(Context context, String htmlContent, Config config) {
 
         String cssPath =
                 String.format(context.getString(R.string.css_tag), "file:///android_asset/css/Style.css");
@@ -83,10 +83,6 @@ public final class HtmlUtil {
 
         if (config.isAlt()) {
             classes += " alt";
-        }
-
-        if (notch) {
-            classes += " notch";
         }
 
         switch (config.getFontSize()) {

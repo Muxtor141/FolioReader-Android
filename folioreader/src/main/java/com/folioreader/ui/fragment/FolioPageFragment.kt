@@ -332,7 +332,7 @@ class FolioPageFragment : Fragment(),
 
                 mWebview!!.loadDataWithBaseURL(
                     mActivityCallback?.streamerUrl + path,
-                    HtmlUtil.getHtmlContent(mWebview!!.context, mHtmlString, mConfig!!, notch),
+                    HtmlUtil.getHtmlContent(mWebview!!.context, mHtmlString, mConfig!!),
                     mimeType,
                     "UTF-8", null
                 )
