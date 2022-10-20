@@ -55,7 +55,8 @@ public class HomeActivity extends AppCompatActivity
         folioReader = FolioReader.get()
                 .setOnHighlightListener(this)
                 .setReadLocatorListener(this)
-                .setOnClosedListener(this);
+                .setOnClosedListener(this)
+                .setConfig((new Config()).setThemeColorRes(R.color.colorPrimary), true);
 
         getHighlightsAndSave();
 

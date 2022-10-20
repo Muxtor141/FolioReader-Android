@@ -34,10 +34,12 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.WindowManager
+import android.widget.SeekBar
 import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.Toolbar
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.folioreader.Config
@@ -55,10 +57,13 @@ import com.folioreader.ui.adapter.SearchAdapter
 import com.folioreader.ui.fragment.FolioPageFragment
 import com.folioreader.ui.fragment.MediaControllerFragment
 import com.folioreader.ui.view.*
+import com.folioreader.ui.view.DirectionalViewpager.OnPageChangeListener
 import com.folioreader.util.AppUtil
 import com.folioreader.util.FileUtil
 import com.folioreader.util.UiUtil
+import com.folioreader.util.changeStatusBarColor
 import com.folioreader.util.parser.EncryptedEpubParser
+import kotlinx.android.synthetic.main.folio_activity.*
 import org.greenrobot.eventbus.EventBus
 import org.readium.r2.shared.Link
 import org.readium.r2.shared.Publication
@@ -66,6 +71,7 @@ import org.readium.r2.streamer.parser.CbzParser
 import org.readium.r2.streamer.parser.PubBox
 import org.readium.r2.streamer.server.Server
 import java.lang.ref.WeakReference
+import kotlin.math.roundToInt
 
 class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControllerCallback,
     View.OnSystemUiVisibilityChangeListener {
@@ -300,6 +306,9 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
             setDayMode()
         }
 
+        setBackground(config)
+
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             val color: Int = if (config.isNightMode) {
                 ContextCompat.getColor(this, R.color.black)
@@ -315,24 +324,54 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
             // Fix for appBarLayout.fitSystemWindows() not being called on API < 16
             appBarLayout!!.setTopMargin(statusBarHeight)
         }
+
+        val lp = spacer?.layoutParams as? ConstraintLayout.LayoutParams
+        lp?.height = UiUtil.getSeekbarHeight(this)
+        spacer?.layoutParams = lp
     }
 
     override fun setDayMode() {
         Log.v(LOG_TAG, "-> setDayMode")
 
+        val white = ContextCompat.getColor(this, R.color.white)
+        val black = ContextCompat.getColor(this, R.color.black)
         actionBar!!.setBackgroundDrawable(
-            ColorDrawable(ContextCompat.getColor(this, R.color.white))
+            ColorDrawable(white)
         )
-        toolbar!!.setTitleTextColor(ContextCompat.getColor(this, R.color.black))
+        toolbar!!.setTitleTextColor(black)
+
+        slider.setCardBackgroundColor(white)
+        page.setTextColor(black)
+
+        val config = AppUtil.getSavedConfig(applicationContext)!!
+        setBackground(config)
+        changeStatusBarColor(config.themeColor)
+    }
+
+    private fun setBackground(config: Config) {
+        val color = when {
+            config.isNightMode && config.isAlt -> R.color.webview_gray
+            config.isNightMode && config.isAlt.not() -> R.color.webview_night
+            config.isNightMode.not() && config.isAlt -> R.color.white
+            else -> R.color.day_background_color
+        }
+        window.setBackgroundDrawable(ColorDrawable(ContextCompat.getColor(this, color)))
     }
 
     override fun setNightMode() {
         Log.v(LOG_TAG, "-> setNightMode")
+        val white = ContextCompat.getColor(this, R.color.night_title_text_color)
+        val black = ContextCompat.getColor(this, R.color.night)
 
         actionBar!!.setBackgroundDrawable(
-            ColorDrawable(ContextCompat.getColor(this, R.color.black))
+            ColorDrawable(black)
         )
-        toolbar!!.setTitleTextColor(ContextCompat.getColor(this, R.color.night_title_text_color))
+        toolbar!!.setTitleTextColor(white)
+        slider.setCardBackgroundColor(black)
+        page.setTextColor(white)
+
+        setBackground(AppUtil.getSavedConfig(applicationContext)!!)
+        changeStatusBarColor(ContextCompat.getColor(this, R.color.night))
     }
 
     private fun initMediaController() {
@@ -561,6 +600,24 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
         searchLocatorVisible?.let {
             folioPageFragment.highlightSearchLocator(searchLocatorVisible)
         }
+        setSeekbar()
+    }
+
+    private fun setSeekbar() {
+        page.text = "${mFolioPageViewPager!!.currentItem + 1}/${mFolioPageFragmentAdapter!!.count}"
+        seekbar.max = mFolioPageFragmentAdapter!!.count - 1
+        seekbar.progress = mFolioPageViewPager!!.currentItem
+        seekbar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekbar: SeekBar?, progress: Int, byUser: Boolean) {
+                page.text = "${progress + 1}/${mFolioPageFragmentAdapter!!.count}"
+            }
+
+            override fun onStartTrackingTouch(p0: SeekBar?) {}
+            override fun onStopTrackingTouch(seekbar: SeekBar) {
+                mFolioPageViewPager?.currentItem = seekbar.progress
+            }
+        })
+
     }
 
     private fun initDistractionFreeMode(savedInstanceState: Bundle?) {
@@ -715,6 +772,8 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
     private fun showSystemUI() {
         Log.v(LOG_TAG, "-> showSystemUI")
 
+        slider?.visibility = View.VISIBLE
+
         val decorView = window.decorView
         decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                 or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
@@ -723,6 +782,8 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
 
     private fun hideSystemUI() {
         Log.v(LOG_TAG, "-> hideSystemUI")
+
+        slider?.visibility = View.GONE
 
         val decorView = window.decorView
         decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_IMMERSIVE
@@ -734,6 +795,7 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
                 // Hide the nav bar and status bar
                 or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                 or View.SYSTEM_UI_FLAG_FULLSCREEN)
+
     }
 
     override fun getEntryReadLocator(): ReadLocator? {
@@ -857,6 +919,10 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
                 )
                 mediaControllerFragment!!.setPlayButtonDrawable()
                 currentChapterIndex = position
+
+                page.text =
+                    "${mFolioPageViewPager!!.currentItem + 1}/${mFolioPageFragmentAdapter!!.count}"
+                seekbar.progress = mFolioPageViewPager!!.currentItem
             }
 
             override fun onPageScrollStateChanged(state: Int) {
@@ -893,6 +959,8 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
             spine, bookFileName, mBookId
         )
         mFolioPageViewPager!!.adapter = mFolioPageFragmentAdapter
+
+        setSeekbar()
 
         // In case if SearchActivity is recreated due to screen rotation then FolioActivity
         // will also be recreated, so searchLocator is checked here.

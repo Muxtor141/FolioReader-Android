@@ -143,6 +143,15 @@ public class UiUtil {
         return dp * context.getResources().getDisplayMetrics().density;
     }
 
+    public static int getSeekbarHeight(Context context) {
+        Resources resources = context.getResources();
+        int resourceId = resources.getIdentifier("navigation_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            return resources.getDimensionPixelSize(resourceId) + Math.round(convertDpToPixel(64F, context));
+        }
+        return Math.round(convertDpToPixel(120F, context));
+    }
+
     public static void copyToClipboard(Context context, String text) {
         ClipboardManager clipboard =
                 (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
