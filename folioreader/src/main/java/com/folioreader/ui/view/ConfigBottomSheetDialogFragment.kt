@@ -388,8 +388,6 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
         colorAnimation?.removeAllUpdateListeners()
     }
 
-    private val Int.dp get() = UiUtil.convertDpToPixel(toFloat(), requireContext()).toInt()
-
     private fun setBackgroundColor(isNightMode: Boolean, isAlt: Boolean) {
 
         val selected = ContextCompat.getColor(requireContext(), R.color.view_bottom_sheet_item_selected)

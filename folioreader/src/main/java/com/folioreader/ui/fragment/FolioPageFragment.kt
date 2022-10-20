@@ -329,9 +329,10 @@ class FolioPageFragment : Fragment(),
                 }
 
             uiHandler.post {
+
                 mWebview!!.loadDataWithBaseURL(
                     mActivityCallback?.streamerUrl + path,
-                    HtmlUtil.getHtmlContent(mWebview!!.context, mHtmlString, mConfig!!),
+                    HtmlUtil.getHtmlContent(mWebview!!.context, mHtmlString, mConfig!!, notch),
                     mimeType,
                     "UTF-8", null
                 )

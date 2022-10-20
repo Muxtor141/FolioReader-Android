@@ -39,8 +39,12 @@ html {
 
 body {
     margin: 0 !important;
-    padding: 4rem 20px !important;
+    padding: 1rem 20px !important;
     overflow: !important;
+}
+
+body.notch {
+    padding: 4rem 20px !important;
 }
 
 /* Custom padding for tablets */

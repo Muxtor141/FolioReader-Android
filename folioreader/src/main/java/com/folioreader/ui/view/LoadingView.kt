@@ -53,11 +53,13 @@ class LoadingView : ConstraintLayout {
     fun updateTheme() {
         var config = getSavedConfig(context)
         if (config == null) config = Config()
-        if (config.isNightMode) {
-            setBackgroundColor(ContextCompat.getColor(context, R.color.night_background_color))
-        } else {
-            setBackgroundColor(ContextCompat.getColor(context, R.color.day_background_color))
+        val color = when {
+            config.isNightMode && config.isAlt.not() -> R.color.webview_night
+            config.isNightMode && config.isAlt -> R.color.webview_gray
+            config.isNightMode.not() && config.isAlt -> R.color.white
+            else -> R.color.day_background_color
         }
+        setBackgroundColor(ContextCompat.getColor(context, color))
     }
 
     @JavascriptInterface
