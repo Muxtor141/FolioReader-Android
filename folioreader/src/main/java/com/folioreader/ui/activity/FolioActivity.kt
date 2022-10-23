@@ -283,7 +283,6 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
 
         initActionBar()
         initMediaController()
-
         setupBook()
     }
 
@@ -328,6 +327,8 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
         val lp = spacer?.layoutParams as? ConstraintLayout.LayoutParams
         lp?.height = UiUtil.getSeekbarHeight(this)
         spacer?.layoutParams = lp
+
+        setBrightness(config.brightness)
     }
 
     override fun setDayMode() {
@@ -356,6 +357,10 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
             else -> R.color.day_background_color
         }
         window.setBackgroundDrawable(ColorDrawable(ContextCompat.getColor(this, color)))
+    }
+
+    override fun setBrightness(brightness: Int) {
+        brightness_fill.alpha = (100 - brightness) / 100F * 0.75F
     }
 
     override fun setNightMode() {

@@ -22,6 +22,7 @@ public class Config implements Parcelable {
     public static final String CONFIG_FONT_SIZE = "font_size";
     public static final String CONFIG_IS_NIGHT_MODE = "is_night_mode";
     public static final String CONFIG_IS_ALT = "is_alt";
+    public static final String CONFIG_BRIGHTNESS = "brightness";
     public static final String CONFIG_THEME_COLOR_INT = "theme_color_int";
     public static final String CONFIG_IS_TTS = "is_tts";
     public static final String CONFIG_ALLOWED_DIRECTION = "allowed_direction";
@@ -35,6 +36,7 @@ public class Config implements Parcelable {
     private int fontSize = 2;
     private boolean nightMode;
     private boolean alt;
+    private int brightness = 100;
     @ColorInt
     private int themeColor = DEFAULT_THEME_COLOR_INT;
     private boolean showTts = true;
@@ -78,6 +80,7 @@ public class Config implements Parcelable {
         dest.writeInt(fontSize);
         dest.writeByte((byte) (nightMode ? 1 : 0));
         dest.writeByte((byte) (alt ? 1 : 0));
+        dest.writeInt(brightness);
         dest.writeInt(themeColor);
         dest.writeByte((byte) (showTts ? 1 : 0));
         dest.writeString(allowedDirection.toString());
@@ -89,6 +92,7 @@ public class Config implements Parcelable {
         fontSize = in.readInt();
         nightMode = in.readByte() != 0;
         alt = in.readByte() != 0;
+        brightness = in.readInt();
         themeColor = in.readInt();
         showTts = in.readByte() != 0;
         allowedDirection = getAllowedDirectionFromString(LOG_TAG, in.readString());
@@ -103,6 +107,7 @@ public class Config implements Parcelable {
         fontSize = jsonObject.optInt(CONFIG_FONT_SIZE);
         nightMode = jsonObject.optBoolean(CONFIG_IS_NIGHT_MODE);
         alt = jsonObject.optBoolean(CONFIG_IS_ALT);
+        brightness = jsonObject.optInt(CONFIG_BRIGHTNESS);
         themeColor = getValidColorInt(jsonObject.optInt(CONFIG_THEME_COLOR_INT));
         showTts = jsonObject.optBoolean(CONFIG_IS_TTS);
         allowedDirection = getAllowedDirectionFromString(LOG_TAG,
@@ -166,6 +171,7 @@ public class Config implements Parcelable {
     public boolean isAlt() {
         return alt;
     }
+    public int getBrightness() { return brightness; }
 
     public Config setNightMode(boolean nightMode) {
         this.nightMode = nightMode;
@@ -174,6 +180,11 @@ public class Config implements Parcelable {
 
     public Config setAlt(boolean alt) {
         this.alt = alt;
+        return this;
+    }
+
+    public Config setBrightness(int brightness) {
+        this.brightness = brightness;
         return this;
     }
 
@@ -300,6 +311,7 @@ public class Config implements Parcelable {
                 ", fontSize=" + fontSize +
                 ", nightMode=" + nightMode +
                 ", alt=" + alt +
+                ", brightness=" + brightness +
                 ", themeColor=" + themeColor +
                 ", showTts=" + showTts +
                 ", allowedDirection=" + allowedDirection +

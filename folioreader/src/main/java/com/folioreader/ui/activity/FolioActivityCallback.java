@@ -42,4 +42,6 @@ public interface FolioActivityCallback {
     String getStreamerUrl();
 
     LoadingView getLoadingView();
+
+    void setBrightness(int brightness);
 }

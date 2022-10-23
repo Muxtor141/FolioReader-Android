@@ -152,10 +152,8 @@
             android:layout_height="match_parent"
             android:layout_marginStart="4dp"
             android:layout_weight="1"
-            android:elevation="0dp"
             app:cardBackgroundColor="@color/night_background_color"
             app:cardCornerRadius="8dp"
-            app:cardElevation="0dp"
             app:strokeColor="@color/view_bottom_sheet_item_selected"
             app:strokeWidth="1dp">
 

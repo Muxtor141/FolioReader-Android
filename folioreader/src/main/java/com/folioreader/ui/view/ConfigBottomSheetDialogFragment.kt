@@ -4,10 +4,7 @@ import android.animation.Animator
 import android.animation.ArgbEvaluator
 import android.animation.ValueAnimator
 import android.app.Dialog
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
-import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -47,8 +44,6 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
     private var isAlt = false
     private lateinit var activityCallback: FolioActivityCallback
     private var colorAnimation: ValueAnimator? = null
-    private var brightness: Int = 0
-    private val writePermission = 1001
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -90,9 +85,9 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
         isAlt = config.isAlt
 
         if (isNightMode) {
-            body.background.setTint(ContextCompat.getColor(context!!, R.color.night))
+            body.background.setTint(ContextCompat.getColor(requireContext(), R.color.night))
         } else {
-            body.background.setTint(ContextCompat.getColor(context!!, R.color.white))
+            body.background.setTint(ContextCompat.getColor(requireContext(), R.color.white))
         }
 
         activityCallback.loadingView.callback = { isLoading ->
@@ -120,47 +115,22 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
     }
 
     private fun configBrightness() {
-        size_seek_bar.max = 255
+        size_seek_bar.max = 100
         size_seek_bar.keyProgressIncrement = 1
-        if (brightness > 0 && Settings.System.canWrite(requireContext())) {
-            setBrightness()
-        } else {
-            brightness =
-                Settings.System.getInt(
-                    context?.contentResolver,
-                    Settings.System.SCREEN_BRIGHTNESS,
-                    0
-                )
-        }
-        size_seek_bar.progress = brightness
+        size_seek_bar.progress = config.brightness
         size_seek_bar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {
-                setBrightness()
+            override fun onStopTrackingTouch(seekBar: SeekBar) {
+                config = AppUtil.getSavedConfig(context)!!
+                config.brightness = seekBar.progress
+                AppUtil.saveConfig(context, config)
             }
 
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                brightness = max(20, progress)
+                activityCallback.setBrightness(progress)
             }
 
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {
-                if (Settings.System.canWrite(requireContext())) return
-                val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS)
-                intent.data = Uri.parse("package:" + requireContext().packageName)
-                startActivityForResult(intent, writePermission)
-            }
+            override fun onStartTrackingTouch(seekBar: SeekBar) {}
         })
-    }
-
-    private fun setBrightness() {
-        if (Settings.System.canWrite(context).not()) return
-        Settings.System.putInt(
-            context?.contentResolver,
-            Settings.System.SCREEN_BRIGHTNESS,
-            brightness
-        )
-        val layoutParams = activity!!.window.attributes
-        layoutParams.screenBrightness = brightness / 255f
-        activity!!.window.attributes = layoutParams
     }
 
     private fun inflateView() {
@@ -252,7 +222,7 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
     private fun configFonts() {
         val colorStateList = UiUtil.getColorList(
             config.themeColor,
-            ContextCompat.getColor(context!!, R.color.grey_color)
+            ContextCompat.getColor(requireContext(), R.color.grey_color)
         )
         font_andada.setTextColor(colorStateList)
         font_lato.setTextColor(colorStateList)
@@ -314,8 +284,8 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
     }
 
     private fun toggleTheme(animate: Boolean) {
-        val day = ContextCompat.getColor(context!!, R.color.white)
-        val night = ContextCompat.getColor(context!!, R.color.night)
+        val day = ContextCompat.getColor(requireContext(), R.color.white)
+        val night = ContextCompat.getColor(requireContext(), R.color.night)
 
         colorAnimation = ValueAnimator.ofObject(
             ArgbEvaluator(),
@@ -353,9 +323,9 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
         val typedArray = activity?.theme?.obtainStyledAttributes(attrs)
         val defaultNavigationBarColor = typedArray?.getColor(
             0,
-            ContextCompat.getColor(context!!, R.color.white)
+            ContextCompat.getColor(requireContext(), R.color.white)
         )
-        val black = ContextCompat.getColor(context!!, R.color.black)
+        val black = ContextCompat.getColor(requireContext(), R.color.black)
 
         val navigationColorAnim = ValueAnimator.ofObject(
             ArgbEvaluator(),
@@ -390,7 +360,8 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
 
     private fun setBackgroundColor(isNightMode: Boolean, isAlt: Boolean) {
 
-        val selected = ContextCompat.getColor(requireContext(), R.color.view_bottom_sheet_item_selected)
+        val selected =
+            ContextCompat.getColor(requireContext(), R.color.view_bottom_sheet_item_selected)
         val unselected = ContextCompat.getColor(requireContext(), android.R.color.transparent)
         card_normal.strokeColor = if (isNightMode.not() && isAlt.not()) selected else unselected
         card_white.strokeColor = if (isNightMode.not() && isAlt) selected else unselected
@@ -398,158 +369,170 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
         card_dark.strokeColor = if (isNightMode && isAlt.not()) selected else unselected
 
         if (isNightMode.not()) {
-            text_brightness.setTextColor(ContextCompat.getColor(context!!, R.color.black))
-            text_background.setTextColor(ContextCompat.getColor(context!!, R.color.black))
-            text_type.setTextColor(ContextCompat.getColor(context!!, R.color.black))
-            text_size.setTextColor(ContextCompat.getColor(context!!, R.color.black))
-            text_orientation.setTextColor(ContextCompat.getColor(context!!, R.color.black))
+            text_brightness.setTextColor(ContextCompat.getColor(requireContext(), R.color.black))
+            text_background.setTextColor(ContextCompat.getColor(requireContext(), R.color.black))
+            text_type.setTextColor(ContextCompat.getColor(requireContext(), R.color.black))
+            text_size.setTextColor(ContextCompat.getColor(requireContext(), R.color.black))
+            text_orientation.setTextColor(ContextCompat.getColor(requireContext(), R.color.black))
 
 
             card_font_andada.background.setTint(
                 ContextCompat.getColor(
-                    context!!,
+                    requireContext(),
                     R.color.white
                 )
             )
-            font_andada.setTextColor((ContextCompat.getColor(context!!, R.color.black)))
+            font_andada.setTextColor((ContextCompat.getColor(requireContext(), R.color.black)))
 
-            card_font_lato.background.setTint(ContextCompat.getColor(context!!, R.color.white))
-            font_lato.setTextColor((ContextCompat.getColor(context!!, R.color.black)))
+            card_font_lato.background.setTint(
+                ContextCompat.getColor(
+                    requireContext(),
+                    R.color.white
+                )
+            )
+            font_lato.setTextColor((ContextCompat.getColor(requireContext(), R.color.black)))
 
-            card_font_lora.background.setTint(ContextCompat.getColor(context!!, R.color.white))
-            font_lora.setTextColor((ContextCompat.getColor(context!!, R.color.black)))
+            card_font_lora.background.setTint(
+                ContextCompat.getColor(
+                    requireContext(),
+                    R.color.white
+                )
+            )
+            font_lora.setTextColor((ContextCompat.getColor(requireContext(), R.color.black)))
 
             card_font_raleway.background.setTint(
                 ContextCompat.getColor(
-                    context!!,
+                    requireContext(),
                     R.color.white
                 )
             )
-            font_raleway.setTextColor((ContextCompat.getColor(context!!, R.color.black)))
+            font_raleway.setTextColor((ContextCompat.getColor(requireContext(), R.color.black)))
 
             card_text_size_minus.background.setTint(
                 ContextCompat.getColor(
-                    context!!,
+                    requireContext(),
                     R.color.white
                 )
             )
-            text_size_minus.setTextColor((ContextCompat.getColor(context!!, R.color.black)))
+            text_size_minus.setTextColor((ContextCompat.getColor(requireContext(), R.color.black)))
 
             card_text_size_add.background.setTint(
                 ContextCompat.getColor(
-                    context!!,
+                    requireContext(),
                     R.color.white
                 )
             )
-            text_size_add.setTextColor((ContextCompat.getColor(context!!, R.color.black)))
+            text_size_add.setTextColor((ContextCompat.getColor(requireContext(), R.color.black)))
 
             card_orientation_vertical.background.setTint(
                 ContextCompat.getColor(
-                    context!!,
+                    requireContext(),
                     R.color.white
                 )
             )
             orientation_vertical.setTextColor(
                 (ContextCompat.getColor(
-                    context!!,
+                    requireContext(),
                     R.color.black
                 ))
             )
 
             card_orientation_horizontal.background.setTint(
                 ContextCompat.getColor(
-                    context!!,
+                    requireContext(),
                     R.color.white
                 )
             )
             orientation_horizontal.setTextColor(
                 (ContextCompat.getColor(
-                    context!!,
+                    requireContext(),
                     R.color.black
                 ))
             )
 
-            page.setTextColor((ContextCompat.getColor(context!!, R.color.white)))
+            page.setTextColor((ContextCompat.getColor(requireContext(), R.color.white)))
         } else {
-            text_brightness.setTextColor(ContextCompat.getColor(context!!, R.color.white))
-            text_background.setTextColor(ContextCompat.getColor(context!!, R.color.white))
-            text_type.setTextColor(ContextCompat.getColor(context!!, R.color.white))
-            text_size.setTextColor(ContextCompat.getColor(context!!, R.color.white))
-            text_orientation.setTextColor(ContextCompat.getColor(context!!, R.color.white))
+            text_brightness.setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
+            text_background.setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
+            text_type.setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
+            text_size.setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
+            text_orientation.setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
 
             card_font_andada.background.setTint(
                 ContextCompat.getColor(
-                    context!!,
+                    requireContext(),
                     R.color.black
                 )
             )
-            font_andada.setTextColor((ContextCompat.getColor(context!!, R.color.white)))
+            font_andada.setTextColor((ContextCompat.getColor(requireContext(), R.color.white)))
 
-            card_font_lato.background.setTint(ContextCompat.getColor(context!!, R.color.black))
-            font_lato.setTextColor((ContextCompat.getColor(context!!, R.color.white)))
+            card_font_lato.background.setTint(
+                ContextCompat.getColor(
+                    requireContext(),
+                    R.color.black
+                )
+            )
+            font_lato.setTextColor((ContextCompat.getColor(requireContext(), R.color.white)))
 
-            card_font_lora.background.setTint(ContextCompat.getColor(context!!, R.color.black))
-            font_lora.setTextColor((ContextCompat.getColor(context!!, R.color.white)))
+            card_font_lora.background.setTint(
+                ContextCompat.getColor(
+                    requireContext(),
+                    R.color.black
+                )
+            )
+            font_lora.setTextColor((ContextCompat.getColor(requireContext(), R.color.white)))
 
             card_font_raleway.background.setTint(
                 ContextCompat.getColor(
-                    context!!,
+                    requireContext(),
                     R.color.black
                 )
             )
-            font_raleway.setTextColor((ContextCompat.getColor(context!!, R.color.white)))
+            font_raleway.setTextColor((ContextCompat.getColor(requireContext(), R.color.white)))
 
             card_text_size_minus.background.setTint(
                 ContextCompat.getColor(
-                    context!!,
+                    requireContext(),
                     R.color.black
                 )
             )
-            text_size_minus.setTextColor((ContextCompat.getColor(context!!, R.color.white)))
+            text_size_minus.setTextColor((ContextCompat.getColor(requireContext(), R.color.white)))
 
             card_text_size_add.background.setTint(
                 ContextCompat.getColor(
-                    context!!,
+                    requireContext(),
                     R.color.black
                 )
             )
-            text_size_add.setTextColor((ContextCompat.getColor(context!!, R.color.white)))
+            text_size_add.setTextColor((ContextCompat.getColor(requireContext(), R.color.white)))
 
             card_orientation_vertical.background.setTint(
                 ContextCompat.getColor(
-                    context!!,
+                    requireContext(),
                     R.color.black
                 )
             )
             orientation_vertical.setTextColor(
                 (ContextCompat.getColor(
-                    context!!,
+                    requireContext(),
                     R.color.white
                 ))
             )
 
             card_orientation_horizontal.background.setTint(
                 ContextCompat.getColor(
-                    context!!,
+                    requireContext(),
                     R.color.black
                 )
             )
             orientation_horizontal.setTextColor(
                 (ContextCompat.getColor(
-                    context!!,
+                    requireContext(),
                     R.color.white
                 ))
             )
 
-            page.setTextColor((ContextCompat.getColor(context!!, R.color.black)))
-        }
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
-        if (requestCode == writePermission) {
-            configBrightness()
+            page.setTextColor((ContextCompat.getColor(requireContext(), R.color.black)))
         }
     }
 }
