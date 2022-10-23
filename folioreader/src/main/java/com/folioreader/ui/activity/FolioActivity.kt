@@ -41,6 +41,7 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.Toolbar
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.folioreader.Config
 import com.folioreader.Constants
@@ -609,6 +610,7 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
     }
 
     private fun setSeekbar() {
+        slider.isVisible = mFolioPageFragmentAdapter!!.count > 1
         page.text = "${mFolioPageViewPager!!.currentItem + 1}/${mFolioPageFragmentAdapter!!.count}"
         seekbar.max = mFolioPageFragmentAdapter!!.count - 1
         seekbar.progress = mFolioPageViewPager!!.currentItem
