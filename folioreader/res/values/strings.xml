@@ -126,6 +126,6 @@
     <string name="view_bottom_sheet_text_size">Yozuv kattaligi</string>
     <string name="view_bottom_sheet_text_minus">A-</string>
     <string name="view_bottom_sheet_text_add">A+</string>
-    <string name="view_bottom_sheet_text_orientation">"Yozuv kattaligi "</string>
+    <string name="view_bottom_sheet_text_orientation">O\'qish yo\'nalishi</string>
 
 </resources>
