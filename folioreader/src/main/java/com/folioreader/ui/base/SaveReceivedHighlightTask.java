@@ -24,6 +24,8 @@ public class SaveReceivedHighlightTask extends AsyncTask<Void, Void, Void> {
 
     @Override
     protected Void doInBackground(Void... voids) {
+        if (highLights == null) return null;
+
         for (HighLight highLight : highLights) {
             HighLightTable.saveHighlightIfNotExists(highLight);
         }

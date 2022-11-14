@@ -113,6 +113,7 @@ public class HighLightTable {
     public static List<String> getHighlightsForPageId(String pageId) {
         String query = "SELECT " + COL_RANGY + " FROM " + TABLE_NAME + " WHERE " + COL_PAGE_ID + " = \"" + pageId + "\"";
         Cursor c = DbAdapter.getHighlightsForPageId(query, pageId);
+        if (c == null) return Collections.emptyList();
         List<String> rangyList = new ArrayList<>();
         while (c.moveToNext()) {
             rangyList.add(c.getString(c.getColumnIndex(COL_RANGY)));

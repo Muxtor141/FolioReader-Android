@@ -90,7 +90,7 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
             body.background.setTint(ContextCompat.getColor(requireContext(), R.color.white))
         }
 
-        activityCallback.loadingView.callback = { isLoading ->
+        activityCallback.loadingView?.callback = { isLoading ->
             controlsEnabled(isLoading.not())
         }
 

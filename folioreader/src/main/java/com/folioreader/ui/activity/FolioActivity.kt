@@ -86,9 +86,8 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
     private var distractionFreeMode: Boolean = false
     private var handler: Handler? = null
 
-    private var currentChapterIndex: Int = 0
+    override var currentChapterIndex: Int = 0
     private var mFolioPageFragmentAdapter: FolioPageFragmentAdapter? = null
-    private var entryReadLocator: ReadLocator? = null
     private var lastReadLocator: ReadLocator? = null
     private var outState: Bundle? = null
     private var savedInstanceState: Bundle? = null
@@ -102,7 +101,7 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
     private var mEpubSourceType: EpubSourceType? = null
     private var mEpubRawId = 0
     private var mediaControllerFragment: MediaControllerFragment? = null
-    private var direction: Config.Direction = Config.Direction.VERTICAL
+    override var direction: Config.Direction = Config.Direction.VERTICAL
     private var portNumber: Int = DEFAULT_PORT_NUMBER
     private var streamerUri: Uri? = null
 
@@ -570,7 +569,7 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
         configFolio()
     }
 
-    override fun getStreamerUrl(): String {
+    override val streamerUrl : String get() {
 
         if (streamerUri == null) {
             streamerUri =
@@ -579,9 +578,7 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
         return streamerUri.toString()
     }
 
-    override fun getLoadingView(): LoadingView? {
-        return currentFragment?.loadingView
-    }
+    override val loadingView get() = currentFragment?.loadingView
 
     override fun onDirectionChange(newDirection: Config.Direction) {
         Log.v(LOG_TAG, "-> onDirectionChange")
@@ -748,9 +745,7 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
         }
     }
 
-    override fun getActivity(): WeakReference<FolioActivity> {
-        return WeakReference(this)
-    }
+    override val activity get() = WeakReference(this)
 
     override fun onSystemUiVisibilityChange(visibility: Int) {
         Log.v(LOG_TAG, "-> onSystemUiVisibilityChange -> visibility = $visibility")
@@ -805,6 +800,7 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
 
     }
 
+    private var entryReadLocator : ReadLocator? = null
     override fun getEntryReadLocator(): ReadLocator? {
         if (entryReadLocator != null) {
             val tempReadLocator = entryReadLocator
@@ -897,10 +893,6 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
             FolioReader.get().retrofit = null
             FolioReader.get().r2StreamerApi = null
         }
-    }
-
-    override fun getCurrentChapterIndex(): Int {
-        return currentChapterIndex
     }
 
     private fun configFolio() {
@@ -1087,10 +1079,6 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
                 spine!![currentChapterIndex].href, false, false
             )
         )
-    }
-
-    override fun getDirection(): Config.Direction {
-        return direction
     }
 
     private fun clearSearchLocator() {
