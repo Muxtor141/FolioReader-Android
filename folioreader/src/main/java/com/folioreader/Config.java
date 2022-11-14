@@ -27,8 +27,8 @@ public class Config implements Parcelable {
     public static final String CONFIG_IS_TTS = "is_tts";
     public static final String CONFIG_ALLOWED_DIRECTION = "allowed_direction";
     public static final String CONFIG_DIRECTION = "direction";
-    private static final AllowedDirection DEFAULT_ALLOWED_DIRECTION = AllowedDirection.ONLY_VERTICAL;
-    private static final Direction DEFAULT_DIRECTION = Direction.VERTICAL;
+    private static final AllowedDirection DEFAULT_ALLOWED_DIRECTION = AllowedDirection.VERTICAL_AND_HORIZONTAL;
+    private static final Direction DEFAULT_DIRECTION = Direction.HORIZONTAL;
     private static final int DEFAULT_THEME_COLOR_INT =
             ContextCompat.getColor(AppContext.get(), R.color.default_theme_accent_color);
 
@@ -39,7 +39,7 @@ public class Config implements Parcelable {
     private int brightness = 100;
     @ColorInt
     private int themeColor = DEFAULT_THEME_COLOR_INT;
-    private boolean showTts = true;
+    private boolean showTts = false;
     private AllowedDirection allowedDirection = DEFAULT_ALLOWED_DIRECTION;
     private Direction direction = DEFAULT_DIRECTION;
 
