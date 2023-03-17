@@ -69,6 +69,7 @@ import org.greenrobot.eventbus.EventBus
 import org.readium.r2.shared.Link
 import org.readium.r2.shared.Publication
 import org.readium.r2.streamer.parser.CbzParser
+import org.readium.r2.streamer.parser.EpubParser
 import org.readium.r2.streamer.parser.PubBox
 import org.readium.r2.streamer.server.Server
 import java.lang.ref.WeakReference
@@ -123,6 +124,7 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
         const val INTENT_EPUB_SOURCE_PATH = "com.folioreader.epub_asset_path"
         const val INTENT_EPUB_SOURCE_TYPE = "epub_source_type"
         const val EXTRA_READ_LOCATOR = "com.folioreader.extra.READ_LOCATOR"
+        const val EXTRA_USE_ENCRYPTION = "com.folioreader.extra.USE_ENCRYPTION"
         private const val BUNDLE_READ_LOCATOR_CONFIG_CHANGE = "BUNDLE_READ_LOCATOR_CONFIG_CHANGE"
         private const val BUNDLE_DISTRACTION_FREE_MODE = "BUNDLE_DISTRACTION_FREE_MODE"
         const val EXTRA_SEARCH_ITEM = "EXTRA_SEARCH_ITEM"
@@ -507,7 +509,12 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
 
         pubBox = when (extension) {
             Publication.EXTENSION.EPUB -> {
-                val epubParser = EncryptedEpubParser(applicationContext)
+                val useEncryption = intent.getBooleanExtra(EXTRA_USE_ENCRYPTION, true)
+                val epubParser = if (useEncryption) {
+                    EncryptedEpubParser(applicationContext)
+                } else {
+                    EpubParser()
+                }
                 epubParser.parse(path!!, "")
             }
             Publication.EXTENSION.CBZ -> {
@@ -569,14 +576,22 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
         configFolio()
     }
 
-    override val streamerUrl : String get() {
+    override val streamerUrl: String
+        get() {
 
-        if (streamerUri == null) {
-            streamerUri =
-                Uri.parse(String.format(STREAMER_URL_TEMPLATE, LOCALHOST, portNumber, bookFileName))
+            if (streamerUri == null) {
+                streamerUri =
+                    Uri.parse(
+                        String.format(
+                            STREAMER_URL_TEMPLATE,
+                            LOCALHOST,
+                            portNumber,
+                            bookFileName
+                        )
+                    )
+            }
+            return streamerUri.toString()
         }
-        return streamerUri.toString()
-    }
 
     override val loadingView get() = currentFragment?.loadingView
 
@@ -800,7 +815,7 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
 
     }
 
-    private var entryReadLocator : ReadLocator? = null
+    private var entryReadLocator: ReadLocator? = null
     override fun getEntryReadLocator(): ReadLocator? {
         if (entryReadLocator != null) {
             val tempReadLocator = entryReadLocator

@@ -51,6 +51,7 @@ public class FolioReader {
     private ReadLocatorListener readLocatorListener;
     private OnClosedListener onClosedListener;
     private ReadLocator readLocator;
+    private boolean useEncryption;
 
     @Nullable
     public Retrofit retrofit;
@@ -129,6 +130,11 @@ public class FolioReader {
                 new IntentFilter(ACTION_FOLIOREADER_CLOSED));
     }
 
+    public FolioReader useEncryption(boolean enabled) {
+        useEncryption = enabled;
+        return singleton;
+    }
+
     public FolioReader openBook(String assetOrSdcardPath) {
         Intent intent = getIntentFromUrl(assetOrSdcardPath, 0);
         context.startActivity(intent);
@@ -163,6 +169,7 @@ public class FolioReader {
         intent.putExtra(Config.EXTRA_OVERRIDE_CONFIG, overrideConfig);
         intent.putExtra(EXTRA_PORT_NUMBER, portNumber);
         intent.putExtra(FolioActivity.EXTRA_READ_LOCATOR, (Parcelable) readLocator);
+        intent.putExtra(FolioActivity.EXTRA_USE_ENCRYPTION, useEncryption);
 
         if (rawId != 0) {
             intent.putExtra(FolioActivity.INTENT_EPUB_SOURCE_PATH, rawId);
