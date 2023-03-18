@@ -345,7 +345,7 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
 
         val config = AppUtil.getSavedConfig(applicationContext)!!
         setBackground(config)
-        changeStatusBarColor(config.themeColor)
+        changeStatusBarColor(white)
     }
 
     private fun setBackground(config: Config) {
