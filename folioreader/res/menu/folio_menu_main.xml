@@ -5,24 +5,31 @@
     tools:context="com.folioreader.ui.activity.FolioActivity">
 
     <item
+        android:id="@+id/itemBookmark"
+        android:icon="@drawable/ic_bookmark"
+        android:title="@string/menu_item_config"
+        app:showAsAction="always"
+        tools:showAsAction="always" />
+
+    <item
         android:id="@+id/itemSearch"
         android:icon="@drawable/ic_search"
         android:title="@string/menu_item_search"
-        app:showAsAction="ifRoom"
+        app:showAsAction="always"
         tools:showAsAction="always" />
 
     <item
         android:id="@+id/itemConfig"
         android:icon="@drawable/ic_drawer"
         android:title="@string/menu_item_contents"
-        app:showAsAction="ifRoom"
+        app:showAsAction="always"
         tools:showAsAction="always" />
 
     <item
         android:id="@+id/itemContents"
         android:icon="@drawable/ic_menu"
         android:title="@string/menu_item_config"
-        app:showAsAction="ifRoom"
+        app:showAsAction="always"
         tools:showAsAction="always" />
 
     <item

@@ -52,6 +52,7 @@ public class FolioReader {
     private OnClosedListener onClosedListener;
     private ReadLocator readLocator;
     private boolean useEncryption;
+    private boolean showSlider;
 
     @Nullable
     public Retrofit retrofit;
@@ -135,6 +136,11 @@ public class FolioReader {
         return singleton;
     }
 
+    public FolioReader showSlider(boolean showSlider) {
+        this.showSlider = showSlider;
+        return singleton;
+    }
+
     public FolioReader openBook(String assetOrSdcardPath) {
         Intent intent = getIntentFromUrl(assetOrSdcardPath, 0);
         context.startActivity(intent);
@@ -170,6 +176,7 @@ public class FolioReader {
         intent.putExtra(EXTRA_PORT_NUMBER, portNumber);
         intent.putExtra(FolioActivity.EXTRA_READ_LOCATOR, (Parcelable) readLocator);
         intent.putExtra(FolioActivity.EXTRA_USE_ENCRYPTION, useEncryption);
+        intent.putExtra(FolioActivity.EXTRA_SHOW_SLIDER, showSlider);
 
         if (rawId != 0) {
             intent.putExtra(FolioActivity.INTENT_EPUB_SOURCE_PATH, rawId);

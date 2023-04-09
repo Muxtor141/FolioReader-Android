@@ -26,7 +26,7 @@
 
     <string name="pages_left">%1$d sahifa qoldi</string>
     <string name="page_left">%1$d sahifa qoldi</string>
-    <string name="highlights">Belgilar</string>
+    <string name="highlights">Belgi</string>
     <string name="half_speed">1/2x</string>
     <string name="onex">1x</string>
     <string name="one_and_half">1&#160;1/2x</string>
@@ -127,5 +127,9 @@
     <string name="view_bottom_sheet_text_minus">A-</string>
     <string name="view_bottom_sheet_text_add">A+</string>
     <string name="view_bottom_sheet_text_orientation">O\'qish yo\'nalishi</string>
+    <string name="bookmarks">Xatchop</string>
+    <string name="bookmark_name">Xatchop nomi</string>
+    <string name="save_bookmark">Saqlash</string>
+    <string name="book_mark_success">Xatchop saqlandi</string>
 
 </resources>

@@ -53,13 +53,13 @@ public class FolioDatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public final void onCreate(final SQLiteDatabase db) {
-        Log.d("create table highlight", "****" + HighLightTable.SQL_CREATE);
+        Log.d("create tables", "****" + HighLightTable.SQL_CREATE + "\n" + BookmarkTable.SQL_CREATE);
         db.execSQL(HighLightTable.SQL_CREATE);
+        db.execSQL(BookmarkTable.SQL_CREATE);
     }
 
     @Override
-    public final void onUpgrade(final SQLiteDatabase db, final int oldVersion,
-                                final int newVersion) {
+    public final void onUpgrade(final SQLiteDatabase db, final int oldVersion, final int newVersion) {
         /* PROTECTED REGION ID(DatabaseUpdate) ENABLED START */
 
         // TODO Implement your database update functionality here and remove the
