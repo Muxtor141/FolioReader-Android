@@ -106,7 +106,7 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
             EventBus.getDefault().post(ReloadDataEvent())
         }
         card_text_size_add.setOnClickListener {
-            val size = min(4, config.fontSize + 1)
+            val size = min(14, config.fontSize + 1)
             if (config.fontSize == size) return@setOnClickListener
             config.fontSize = size
             AppUtil.saveConfig(activity, config)
