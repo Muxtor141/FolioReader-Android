@@ -12,16 +12,17 @@ import org.readium.r2.shared.Locations
 import org.readium.r2.shared.Locator
 import org.readium.r2.shared.LocatorText
 
-@JsonPropertyOrder("bookId", "href", "created", "locations")
+@JsonPropertyOrder("bookId","page" ,"href", "created", "locations")
 @JsonIgnoreProperties(ignoreUnknown = true)
 open class ReadLocator : Locator, Parcelable {
 
     var bookId: String
+    var page:Int=0;
 
     @Suppress("unused") // Required for fromJSON()
     constructor() : this("", "", 0, Locations())
 
-    constructor(bookId: String, href: String, created: Long, locations: Locations) :
+    constructor(bookId: String, href: String, created: Long, locations: Locations,) :
             this(bookId, href, created, "", locations, null)
 
     constructor(
@@ -29,6 +30,7 @@ open class ReadLocator : Locator, Parcelable {
         text: LocatorText?
     ) : super(href, created, title, locations, text) {
         this.bookId = bookId
+        this.page=page
     }
 
     constructor(parcel: Parcel) : this(
@@ -42,6 +44,7 @@ open class ReadLocator : Locator, Parcelable {
 
     override fun writeToParcel(dest: Parcel?, flags: Int) {
         dest?.writeString(bookId)
+        dest?.writeInt(page)
         dest?.writeString(href)
         dest?.writeLong(created)
         dest?.writeString(title)

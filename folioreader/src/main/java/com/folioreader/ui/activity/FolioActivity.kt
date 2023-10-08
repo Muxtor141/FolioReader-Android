@@ -923,6 +923,11 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
     override fun onDestroy() {
         super.onDestroy()
 
+        Log.i("newLocation141", mFolioPageViewPager!!.currentItem.toString());
+
+        lastReadLocator?.page = mFolioPageViewPager!!.currentItem
+
+
         if (outState != null) outState!!.putSerializable(
             BUNDLE_READ_LOCATOR_CONFIG_CHANGE, lastReadLocator
         )
