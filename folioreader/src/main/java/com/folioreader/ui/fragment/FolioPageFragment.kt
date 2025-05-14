@@ -623,6 +623,46 @@ class FolioPageFragment : Fragment(),
         return lastReadLocator
     }
 
+    /**
+     * Save the reading position when called from WebViewPager
+     * @param position the position in the current chapter
+     */
+    fun saveReadLocator(position: Int) {
+        try {
+            synchronized(this) {
+                // Check if the WebView is initialized
+                if (mWebview == null || !isAdded) {
+                    Log.w(LOG_TAG, "-> saveReadLocator: WebView not initialized or fragment not added")
+                    return
+                }
+                
+                // Call JavaScript to get the current CFI
+                mWebview!!.loadUrl(getString(R.string.callComputeLastReadCfi))
+                (this as java.lang.Object).wait(1000)
+                
+                // If we have a lastReadLocator from the JavaScript call
+                if (lastReadLocator != null) {
+                    // Update page number
+                    lastReadLocator!!.page = position
+                    
+                    // Broadcast to save the reading position
+                    val intent = Intent(FolioReader.ACTION_SAVE_READ_LOCATOR)
+                    intent.putExtra(FolioReader.EXTRA_READ_LOCATOR, lastReadLocator as Parcelable?)
+                    LocalBroadcastManager.getInstance(requireContext()).sendBroadcast(intent)
+                    
+                    // Also update activity
+                    if (mActivityCallback != null) {
+                        mActivityCallback?.storeLastReadLocator(lastReadLocator!!)
+                    }
+                }
+            }
+        } catch (e: InterruptedException) {
+            Log.e(LOG_TAG, "-> saveReadLocator: ", e)
+        } catch (e: Exception) {
+            Log.e(LOG_TAG, "-> saveReadLocator: Unexpected error", e)
+        }
+    }
+
     @JavascriptInterface
     fun storeLastReadCfi(cfi: String) {
 

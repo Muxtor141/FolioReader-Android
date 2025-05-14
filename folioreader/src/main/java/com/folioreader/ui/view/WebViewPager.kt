@@ -64,6 +64,12 @@ class WebViewPager : ViewPager {
 
             override fun onPageSelected(position: Int) {
                 Log.v(LOG_TAG, "-> onPageSelected -> $position")
+                
+                // Save current page position in the parent fragment
+                if (folioWebView != null && folioWebView!!.parentFragment != null) {
+                    // Create a read locator and trigger saving through the parent fragment
+                    folioWebView!!.parentFragment.saveReadLocator(position)
+                }
             }
 
             override fun onPageScrollStateChanged(state: Int) {}

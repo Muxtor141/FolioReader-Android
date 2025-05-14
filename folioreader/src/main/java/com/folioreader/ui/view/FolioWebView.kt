@@ -474,9 +474,25 @@ class FolioWebView : WebView {
         if (lastScrollType == LastScrollType.USER) {
             //Log.d(LOG_TAG, "-> onScrollChanged -> scroll initiated by user");
             parentFragment.searchLocatorVisible = null
+            
+            // Save the reading position after user scrolling with a small delay
+            uiHandler.removeCallbacks(saveReadingPositionRunnable)
+            uiHandler.postDelayed(saveReadingPositionRunnable, 500) // 500ms delay to avoid saving too frequently
         }
 
         lastScrollType = null
+    }
+
+    // Runnable for saving reading position after scroll
+    private val saveReadingPositionRunnable = Runnable {
+        // For horizontal mode, get current page from WebViewPager
+        val currentPage = if (folioActivityCallback.direction == Config.Direction.HORIZONTAL && ::webViewPager.isInitialized) {
+            webViewPager.currentItem
+        } else {
+            // For vertical mode, we just use 0 as the page (since vertical scrolling doesn't use paging)
+            0
+        }
+        parentFragment.saveReadLocator(currentPage)
     }
 
     interface ScrollListener {

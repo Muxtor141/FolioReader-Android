@@ -970,6 +970,27 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
                 page.text =
                     "${mFolioPageViewPager!!.currentItem + 1}/${mFolioPageFragmentAdapter!!.count}"
                 seekbar.progress = mFolioPageViewPager!!.currentItem
+                
+                // Save reading position every time page changes
+                try {
+                    val fragment = currentFragment
+                    if (fragment != null) {
+                        val readLocator = fragment.getLastReadLocator()
+                        // Update page number in the locator
+                        if (readLocator != null) {
+                            readLocator.page = mFolioPageViewPager!!.currentItem
+                            lastReadLocator = readLocator
+                            
+                            // Send broadcast to save the reading position
+                            val localBroadcastManager = LocalBroadcastManager.getInstance(this@FolioActivity)
+                            val intent = Intent(FolioReader.ACTION_SAVE_READ_LOCATOR)
+                            intent.putExtra(FolioReader.EXTRA_READ_LOCATOR, readLocator as Parcelable?)
+                            localBroadcastManager.sendBroadcast(intent)
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e(LOG_TAG, "-> onPageSelected -> Failed to save read locator", e)
+                }
             }
 
             override fun onPageScrollStateChanged(state: Int) {
